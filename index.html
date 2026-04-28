@@ -41,15 +41,31 @@ h1 {
   color: white;
   box-shadow: 0 0 8px #00ff00;
   cursor: pointer;
-  transition: 0.2s;
 }
 
 .item:active {
   background: #00ff00;
   color: black;
 }
-</style>
 
+#scanBtn {
+  margin: 20px auto 30px;
+  display: block;
+  padding: 12px 20px;
+  font-size: 16px;
+  border: 2px solid #00ff00;
+  border-radius: 20px;
+  background: black;
+  color: #00ff00;
+  cursor: pointer;
+  box-shadow: 0 0 10px #00ff00;
+}
+
+#scanBtn:active {
+  background: #00ff00;
+  color: black;
+}
+</style>
 </head>
 
 <body>
@@ -59,10 +75,21 @@ h1 {
 
 <div id="list"></div>
 
+<button id="scanBtn">🔄 Scan lại</button>
+
 <script>
 const GEMINI_API_KEY = "AIzaSyAnjhXXjS2KVPfyV5VsW_tMeJdUOCKWD8I";
 
 let userLat, userLng;
+let lastIds = [];
+
+// ===== SHUFFLE =====
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
 
 // ===== GPS =====
 navigator.geolocation.getCurrentPosition(pos => {
@@ -73,15 +100,27 @@ navigator.geolocation.getCurrentPosition(pos => {
   document.getElementById("status").innerHTML = "Không lấy được GPS ❌";
 });
 
-// ===== Overpass =====
+// ===== SCAN BUTTON =====
+document.getElementById("scanBtn").onclick = () => {
+  document.getElementById("status").innerHTML = "Đang quét lại...";
+  document.getElementById("list").innerHTML = "";
+  loadPlaces();
+};
+
+// ===== LOAD DATA =====
 async function loadPlaces() {
+
+  const offset = (Math.random() - 0.5) * 0.002;
+  const lat = userLat + offset;
+  const lng = userLng + offset;
+
   const query = `
   [out:json];
   (
-    node(around:1200,${userLat},${userLng})["amenity"="restaurant"];
-    node(around:1200,${userLat},${userLng})["amenity"="cafe"];
-    way(around:1200,${userLat},${userLng})["amenity"="restaurant"];
-    way(around:1200,${userLat},${userLng})["amenity"="cafe"];
+    node(around:1200,${lat},${lng})["amenity"="restaurant"];
+    node(around:1200,${lat},${lng})["amenity"="cafe"];
+    way(around:1200,${lat},${lng})["amenity"="restaurant"];
+    way(around:1200,${lat},${lng})["amenity"="cafe"];
   );
   out center;
   `;
@@ -94,9 +133,11 @@ async function loadPlaces() {
 
     const data = await res.json();
 
-    const places = data.elements
+    let places = data.elements
       .filter(p => p.tags && p.tags.name)
-      .slice(0, 20);
+      .slice(0, 40);
+
+    shuffle(places);
 
     analyzeAI(places);
 
@@ -113,13 +154,15 @@ async function analyzeAI(places) {
   const randomSeed = Math.floor(Math.random() * 100000);
 
   const prompt = `
-Thời gian hiện tại: ${timeString}
+Thời gian: ${timeString}
 Random seed: ${randomSeed}
 
-Danh sách địa điểm:
+Danh sách:
 ${places.map(p => `id:${p.id} - ${p.tags.name}`).join("\n")}
 
-Hãy chọn 5 địa điểm có khả năng đông người nhất vào thời điểm này.
+Yêu cầu:
+- Chọn NGẪU NHIÊN 10 địa điểm
+- Không trùng lần trước
 
 Trả JSON:
 [{"id":123}]
@@ -142,13 +185,7 @@ Trả JSON:
 
     text = text.replace(/```json|```/g, "").trim();
 
-    let aiList = [];
-    try {
-      aiList = JSON.parse(text);
-    } catch {
-      renderFallback(places);
-      return;
-    }
+    let aiList = JSON.parse(text);
 
     render(aiList, places);
 
@@ -157,7 +194,7 @@ Trả JSON:
   }
 }
 
-// ===== LẤY TỌA ĐỘ ĐÚNG =====
+// ===== GET LAT LNG =====
 function getLatLng(p) {
   return {
     lat: p.lat || p.center?.lat,
@@ -165,7 +202,7 @@ function getLatLng(p) {
   };
 }
 
-// ===== TÍNH KHOẢNG CÁCH =====
+// ===== DISTANCE =====
 function getDistance(lat1, lon1, lat2, lon2) {
   const R = 6371;
   const dLat = (lat2-lat1) * Math.PI/180;
@@ -179,21 +216,29 @@ function getDistance(lat1, lon1, lat2, lon2) {
   return (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))).toFixed(2);
 }
 
-// ===== RENDER AI =====
+// ===== RENDER =====
 function render(aiList, raw) {
   const list = document.getElementById("list");
   list.innerHTML = "";
-  document.getElementById("status").innerHTML = "Hotspots found ✔";
 
-  aiList.forEach((item, index) => {
+  let newIds = [];
+
+  aiList.forEach((item) => {
+    if (lastIds.includes(item.id)) return;
+
     const match = raw.find(p => p.id == item.id);
     if (!match) return;
 
-    createItem(match, index, list);
+    newIds.push(item.id);
+    createItem(match, newIds.length - 1, list);
   });
+
+  lastIds = newIds;
 
   if (list.innerHTML === "") {
     renderFallback(raw);
+  } else {
+    document.getElementById("status").innerHTML = "Hotspots mới ✔";
   }
 }
 
@@ -201,16 +246,16 @@ function render(aiList, raw) {
 function renderFallback(raw) {
   const list = document.getElementById("list");
   list.innerHTML = "";
-  document.getElementById("status").innerHTML = "Hiển thị gần bạn 📍";
 
-  raw.slice(0, 5).forEach((p, index) => {
+  raw.slice(0, 10).forEach((p, index) => {
     createItem(p, index, list);
   });
+
+  document.getElementById("status").innerHTML = "Hiển thị ngẫu nhiên 📍";
 }
 
-// ===== CREATE ITEM =====
+// ===== ITEM =====
 function createItem(p, index, list) {
-
   const {lat, lng} = getLatLng(p);
   if (!lat || !lng) return;
 
