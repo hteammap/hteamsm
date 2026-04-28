@@ -2,6 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HTeam Map</title>
 
 <style>
@@ -15,35 +16,38 @@ body {
 
 /* TITLE */
 h1 {
-  font-size: 40px;
-  margin-top: 30px;
-  text-shadow: 0 0 15px #00ff00;
+  font-size: 24px;
+  margin-top: 20px;
+  text-shadow: 0 0 10px #00ff00;
 }
 
+/* STATUS */
 #status {
-  margin: 10px 0 30px;
-  font-size: 18px;
+  margin: 10px 0 20px;
+  font-size: 14px;
 }
 
 /* LIST */
 #list {
+  max-width: 500px;
+  margin: auto;
   padding: 0 10px;
 }
 
 .item {
   border: 2px solid #00ff00;
-  border-radius: 20px;
-  padding: 15px;
-  margin: 15px 0;
-  font-size: 20px;
+  border-radius: 15px;
+  padding: 12px;
+  margin: 10px 0;
+  font-size: 16px;
   text-align: left;
   color: white;
-  box-shadow: 0 0 10px #00ff00;
+  box-shadow: 0 0 8px #00ff00;
   cursor: pointer;
   transition: 0.2s;
 }
 
-.item:hover {
+.item:active {
   background: #00ff00;
   color: black;
 }
@@ -54,7 +58,7 @@ h1 {
 <body>
 
 <h1>HTeam Map</h1>
-<div id="status">Looking for a hot spot...</div>
+<div id="status">Đang tìm hotspot...</div>
 
 <div id="list"></div>
 
@@ -84,80 +88,111 @@ async function loadPlaces() {
   out;
   `;
 
-  const res = await fetch("https://overpass-api.de/api/interpreter", {
-    method: "POST",
-    body: query
-  });
+  try {
+    const res = await fetch("https://overpass-api.de/api/interpreter", {
+      method: "POST",
+      body: query
+    });
 
-  const data = await res.json();
-  const places = data.elements.slice(0, 10);
+    const data = await res.json();
+    const places = data.elements.filter(p => p.tags && p.tags.name).slice(0, 15);
 
-  analyzeAI(places);
+    analyzeAI(places);
+  } catch {
+    document.getElementById("status").innerHTML = "Lỗi tải dữ liệu ❌";
+  }
 }
 
-// Gửi Gemini
+// AI chọn hotspot
 async function analyzeAI(places) {
-  const names = places.map(p => p.tags.name || "Unknown");
+  const names = places.map(p => p.tags.name);
 
   const prompt = `
-  Chọn 5 địa điểm đông người nhất từ danh sách:
+  Từ danh sách sau, chọn 5 địa điểm có khả năng đông người nhất:
   ${names.join(", ")}
 
-  Trả JSON:
+  Chỉ trả về JSON dạng:
   [{"name":"..."}]
   `;
 
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-    {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }]
-      })
-    }
-  );
-
-  const data = await res.json();
-  let text = data.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
-
-  text = text.replace(/```json|```/g, "");
-
-  let aiList = [];
   try {
-    aiList = JSON.parse(text);
-  } catch {
-    document.getElementById("status").innerHTML = "AI lỗi ❌";
-    return;
-  }
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }]
+        })
+      }
+    );
 
-  render(aiList, places);
+    const data = await res.json();
+    let text = data.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
+
+    text = text.replace(/```json|```/g, "").trim();
+
+    let aiList = [];
+    try {
+      aiList = JSON.parse(text);
+    } catch {
+      renderFallback(places);
+      return;
+    }
+
+    render(aiList, places);
+
+  } catch {
+    renderFallback(places);
+  }
 }
 
-// Hiển thị
+// render AI (fix match thông minh)
 function render(aiList, raw) {
   const list = document.getElementById("list");
   list.innerHTML = "";
   document.getElementById("status").innerHTML = "Hotspots found ✔";
 
   aiList.forEach((item, index) => {
-    const match = raw.find(p => (p.tags.name || "") === item.name);
+    const match = raw.find(p => {
+      const name = (p.tags.name || "").toLowerCase();
+      return name.includes(item.name.toLowerCase());
+    });
+
     if (!match) return;
 
-    const lat = match.lat;
-    const lng = match.lon;
-
-    const div = document.createElement("div");
-    div.className = "item";
-    div.innerHTML = `${index + 1}. ${item.name}`;
-
-    div.onclick = () => {
-      const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-      window.open(url, "_blank");
-    };
-
-    list.appendChild(div);
+    createItem(match, index, list);
   });
+
+  // nếu AI fail quá nhiều thì fallback
+  if (list.innerHTML === "") {
+    renderFallback(raw);
+  }
+}
+
+// fallback khi AI lỗi
+function renderFallback(raw) {
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+  document.getElementById("status").innerHTML = "Hiển thị gần bạn 📍";
+
+  raw.slice(0, 5).forEach((p, index) => {
+    createItem(p, index, list);
+  });
+}
+
+// tạo item
+function createItem(p, index, list) {
+  const div = document.createElement("div");
+  div.className = "item";
+  div.innerHTML = `${index + 1}. ${p.tags.name}`;
+
+  div.onclick = () => {
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lon}`;
+    window.open(url, "_blank");
+  };
+
+  list.appendChild(div);
 }
 </script>
 
