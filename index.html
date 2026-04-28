@@ -107,7 +107,7 @@ document.getElementById("scanBtn").onclick = () => {
   loadPlaces();
 };
 
-// ===== LOAD DATA =====
+// ===== LOAD DATA (NÂNG CẤP LOẠI ĐỊA ĐIỂM) =====
 async function loadPlaces() {
 
   const offset = (Math.random() - 0.5) * 0.002;
@@ -117,10 +117,17 @@ async function loadPlaces() {
   const query = `
   [out:json];
   (
-    node(around:1200,${lat},${lng})["amenity"="restaurant"];
-    node(around:1200,${lat},${lng})["amenity"="cafe"];
-    way(around:1200,${lat},${lng})["amenity"="restaurant"];
-    way(around:1200,${lat},${lng})["amenity"="cafe"];
+    node(around:1500,${lat},${lng})["amenity"="restaurant"];
+    node(around:1500,${lat},${lng})["amenity"="cafe"];
+    node(around:1500,${lat},${lng})["amenity"="fast_food"];
+    node(around:1500,${lat},${lng})["amenity"="hospital"];
+    node(around:1500,${lat},${lng})["amenity"="university"];
+    node(around:1500,${lat},${lng})["amenity"="bus_station"];
+    node(around:1500,${lat},${lng})["shop"="mall"];
+
+    way(around:1500,${lat},${lng})["amenity"="restaurant"];
+    way(around:1500,${lat},${lng})["amenity"="cafe"];
+    way(around:1500,${lat},${lng})["shop"="mall"];
   );
   out center;
   `;
@@ -135,7 +142,7 @@ async function loadPlaces() {
 
     let places = data.elements
       .filter(p => p.tags && p.tags.name)
-      .slice(0, 40);
+      .slice(0, 50);
 
     shuffle(places);
 
@@ -146,23 +153,38 @@ async function loadPlaces() {
   }
 }
 
-// ===== AI =====
+// ===== AI CHỌN ĐIỂM "CÓ KHÁCH" =====
 async function analyzeAI(places) {
 
   const now = new Date();
-  const timeString = now.toLocaleString("vi-VN");
-  const randomSeed = Math.floor(Math.random() * 100000);
+  const hour = now.getHours();
 
   const prompt = `
-Thời gian: ${timeString}
-Random seed: ${randomSeed}
+Bạn là tài xế Xanh SM Bike tại Hà Nội.
+
+Hiện tại là ${hour} giờ.
+
+Hãy chọn 10 địa điểm dễ bắt khách nhất.
+
+Ưu tiên theo giờ:
+- 6h–9h: trường học, quán ăn sáng
+- 11h–13h: quán ăn, văn phòng
+- 17h–20h: mall, quán ăn, khu đông
+- 21h–2h: quán ăn đêm, bệnh viện
+
+Ưu tiên chung:
+- Bệnh viện
+- Đại học
+- Bến xe
+- Trung tâm thương mại
+- Quán ăn đông
 
 Danh sách:
 ${places.map(p => `id:${p.id} - ${p.tags.name}`).join("\n")}
 
 Yêu cầu:
-- Chọn NGẪU NHIÊN 10 địa điểm
-- Không trùng lần trước
+- Chọn 10 địa điểm KHẢ NĂNG CÓ KHÁCH CAO
+- Không chọn lại điểm cũ nếu có thể
 
 Trả JSON:
 [{"id":123}]
@@ -238,7 +260,7 @@ function render(aiList, raw) {
   if (list.innerHTML === "") {
     renderFallback(raw);
   } else {
-    document.getElementById("status").innerHTML = "Hotspots mới ✔";
+    document.getElementById("status").innerHTML = "Hotspot ngon 🔥";
   }
 }
 
@@ -251,7 +273,7 @@ function renderFallback(raw) {
     createItem(p, index, list);
   });
 
-  document.getElementById("status").innerHTML = "Điểm nóng gần đây 📍";
+  document.getElementById("status").innerHTML = "Gần bạn 📍";
 }
 
 // ===== ITEM =====
@@ -263,7 +285,16 @@ function createItem(p, index, list) {
 
   const div = document.createElement("div");
   div.className = "item";
-  div.innerHTML = `${index + 1}. ${p.tags.name} (${distance} km)`;
+
+  // gắn icon theo loại cho dễ nhìn
+  let icon = "📍";
+  if (p.tags.amenity === "hospital") icon = "🏥";
+  else if (p.tags.amenity === "university") icon = "🎓";
+  else if (p.tags.shop === "mall") icon = "🏢";
+  else if (p.tags.amenity === "restaurant") icon = "🍜";
+  else if (p.tags.amenity === "cafe") icon = "☕";
+
+  div.innerHTML = `${index + 1}. ${icon} ${p.tags.name} (${distance} km)`;
 
   div.onclick = () => {
     const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
