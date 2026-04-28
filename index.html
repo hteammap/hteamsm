@@ -184,30 +184,41 @@ async function loadPlaces() {
 async function analyzeAI(places, timeInfo) {
 
   const prompt = `
-Bạn là tài xế Xanh SM Bike tại Hà Nội.
+Bạn là tài xế Xanh SM Bike chuyên chạy ca đêm tại Hà Nội.
 
 Thời gian: ${timeInfo.full}
-${timeInfo.isWeekend ? "Hôm nay là cuối tuần." : "Hôm nay là ngày thường."}
+${timeInfo.isWeekend ? "Hôm nay là cuối tuần (nhu cầu đi lại ban đêm cao hơn)." : "Hôm nay là ngày thường."}
 
-Chọn 10 điểm dễ bắt khách nhất.
+Nhiệm vụ:
+Chọn 10 địa điểm có khả năng NỔ ĐƠN CAO NHẤT (có khách gọi xe nhiều).
 
-Theo giờ:
-- 6-9h: ăn sáng, trường
-- 11-13h: ăn trưa
-- 17-20h: mall, ăn uống
-- 21-2h: bệnh viện, ăn đêm
+⚠️ QUAN TRỌNG:
+- Sau 22h: nhiều quán ăn, cafe đã đóng cửa → KHÔNG ưu tiên
+- Chỉ chọn nơi còn hoạt động ban đêm hoặc có nhu cầu di chuyển
 
-Ưu tiên:
-- Bệnh viện
-- Đại học
-- Mall
-- Bến xe
-- Quán ăn đông
+Ưu tiên mạnh:
+- Bệnh viện (trực đêm, cấp cứu)
+- Bến xe, điểm trung chuyển
+- Khu đông dân cư, ngõ lớn
+- Khu trọ, sinh viên, công nhân
+- Quán ăn đêm (còn mở)
+- Khu vui chơi đêm (nếu cuối tuần)
+- Đường lớn dễ bắt khách
+
+Tránh:
+- Quán cafe yên tĩnh
+- Nhà hàng sang (ít gọi xe)
+- Nơi vắng người
+- Địa điểm có khả năng đóng cửa sau 22h
+
+Tư duy như tài xế thật:
+- Khách sẽ đứng ở đâu để gọi xe?
+- Chỗ nào dễ có người vừa đi ra ngoài cần xe?
 
 Danh sách:
 ${places.map(p => `id:${p.id} - ${p.tags.name}`).join("\n")}
 
-Trả JSON:
+Chỉ trả JSON:
 [{"id":123}]
 `;
 
