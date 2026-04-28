@@ -21,8 +21,14 @@ h1 {
 }
 
 #status {
-  margin: 10px 0 15px;
+  margin: 10px 0 5px;
   font-size: 14px;
+}
+
+#time {
+  font-size: 13px;
+  margin-bottom: 10px;
+  color: #00ffaa;
 }
 
 #list {
@@ -72,16 +78,35 @@ h1 {
 
 <h1>HTeam Map</h1>
 <div id="status">Đang quét hotspot...</div>
+<div id="time"></div>
 
 <div id="list"></div>
 
 <button id="scanBtn">🔄 Scan lại</button>
 
 <script>
-const GEMINI_API_KEY = "AIzaSyAnjhXXjS2KVPfyV5VsW_tMeJdUOCKWD8I";
+const GEMINI_API_KEY = "YOUR_API_KEY";
 
 let userLat, userLng;
 let lastIds = [];
+
+// ===== TIME =====
+function getTimeInfo() {
+  const now = new Date();
+
+  const hour = now.getHours();
+  const day = now.getDate();
+  const month = now.getMonth() + 1;
+  const year = now.getFullYear();
+  const weekday = now.toLocaleDateString("vi-VN", { weekday: "long" });
+  const isWeekend = now.getDay() === 0 || now.getDay() === 6;
+
+  const full = `${weekday}, ${day}/${month}/${year} - ${hour}h`;
+
+  document.getElementById("time").innerText = full;
+
+  return { hour, isWeekend, full };
+}
 
 // ===== SHUFFLE =====
 function shuffle(array) {
@@ -107,8 +132,10 @@ document.getElementById("scanBtn").onclick = () => {
   loadPlaces();
 };
 
-// ===== LOAD DATA (NÂNG CẤP LOẠI ĐỊA ĐIỂM) =====
+// ===== LOAD DATA =====
 async function loadPlaces() {
+
+  const timeInfo = getTimeInfo();
 
   const offset = (Math.random() - 0.5) * 0.002;
   const lat = userLat + offset;
@@ -146,45 +173,39 @@ async function loadPlaces() {
 
     shuffle(places);
 
-    analyzeAI(places);
+    analyzeAI(places, timeInfo);
 
   } catch {
     document.getElementById("status").innerHTML = "Lỗi tải dữ liệu ❌";
   }
 }
 
-// ===== AI CHỌN ĐIỂM "CÓ KHÁCH" =====
-async function analyzeAI(places) {
-
-  const now = new Date();
-  const hour = now.getHours();
+// ===== AI =====
+async function analyzeAI(places, timeInfo) {
 
   const prompt = `
 Bạn là tài xế Xanh SM Bike tại Hà Nội.
 
-Hiện tại là ${hour} giờ.
+Thời gian: ${timeInfo.full}
+${timeInfo.isWeekend ? "Hôm nay là cuối tuần." : "Hôm nay là ngày thường."}
 
-Hãy chọn 10 địa điểm dễ bắt khách nhất.
+Chọn 10 điểm dễ bắt khách nhất.
 
-Ưu tiên theo giờ:
-- 6h–9h: trường học, quán ăn sáng
-- 11h–13h: quán ăn, văn phòng
-- 17h–20h: mall, quán ăn, khu đông
-- 21h–2h: quán ăn đêm, bệnh viện
+Theo giờ:
+- 6-9h: ăn sáng, trường
+- 11-13h: ăn trưa
+- 17-20h: mall, ăn uống
+- 21-2h: bệnh viện, ăn đêm
 
-Ưu tiên chung:
+Ưu tiên:
 - Bệnh viện
 - Đại học
+- Mall
 - Bến xe
-- Trung tâm thương mại
 - Quán ăn đông
 
 Danh sách:
 ${places.map(p => `id:${p.id} - ${p.tags.name}`).join("\n")}
-
-Yêu cầu:
-- Chọn 10 địa điểm KHẢ NĂNG CÓ KHÁCH CAO
-- Không chọn lại điểm cũ nếu có thể
 
 Trả JSON:
 [{"id":123}]
@@ -216,7 +237,7 @@ Trả JSON:
   }
 }
 
-// ===== GET LAT LNG =====
+// ===== UTILS =====
 function getLatLng(p) {
   return {
     lat: p.lat || p.center?.lat,
@@ -224,16 +245,16 @@ function getLatLng(p) {
   };
 }
 
-// ===== DISTANCE =====
 function getDistance(lat1, lon1, lat2, lon2) {
   const R = 6371;
   const dLat = (lat2-lat1) * Math.PI/180;
   const dLon = (lon2-lon1) * Math.PI/180;
 
   const a =
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) *
-    Math.sin(dLon/2) * Math.sin(dLon/2);
+    Math.sin(dLat/2)**2 +
+    Math.cos(lat1*Math.PI/180) *
+    Math.cos(lat2*Math.PI/180) *
+    Math.sin(dLon/2)**2;
 
   return (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))).toFixed(2);
 }
@@ -245,7 +266,7 @@ function render(aiList, raw) {
 
   let newIds = [];
 
-  aiList.forEach((item) => {
+  aiList.forEach(item => {
     if (lastIds.includes(item.id)) return;
 
     const match = raw.find(p => p.id == item.id);
@@ -283,10 +304,6 @@ function createItem(p, index, list) {
 
   const distance = getDistance(userLat, userLng, lat, lng);
 
-  const div = document.createElement("div");
-  div.className = "item";
-
-  // gắn icon theo loại cho dễ nhìn
   let icon = "📍";
   if (p.tags.amenity === "hospital") icon = "🏥";
   else if (p.tags.amenity === "university") icon = "🎓";
@@ -294,11 +311,12 @@ function createItem(p, index, list) {
   else if (p.tags.amenity === "restaurant") icon = "🍜";
   else if (p.tags.amenity === "cafe") icon = "☕";
 
+  const div = document.createElement("div");
+  div.className = "item";
   div.innerHTML = `${index + 1}. ${icon} ${p.tags.name} (${distance} km)`;
 
   div.onclick = () => {
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-    window.open(url, "_blank");
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, "_blank");
   };
 
   list.appendChild(div);
