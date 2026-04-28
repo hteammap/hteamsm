@@ -16,15 +16,32 @@ body {
 
 /* TITLE */
 h1 {
-  font-size: 24px;
-  margin-top: 20px;
+  font-size: 22px;
+  margin-top: 15px;
   text-shadow: 0 0 10px #00ff00;
 }
 
 /* STATUS */
 #status {
-  margin: 10px 0 20px;
+  margin: 10px 0;
   font-size: 14px;
+}
+
+/* BUTTON */
+button {
+  background: black;
+  color: #00ff00;
+  border: 2px solid #00ff00;
+  padding: 10px 15px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+button:active {
+  background: #00ff00;
+  color: black;
 }
 
 /* LIST */
@@ -39,12 +56,11 @@ h1 {
   border-radius: 15px;
   padding: 12px;
   margin: 10px 0;
-  font-size: 16px;
+  font-size: 15px;
   text-align: left;
   color: white;
   box-shadow: 0 0 8px #00ff00;
   cursor: pointer;
-  transition: 0.2s;
 }
 
 .item:active {
@@ -52,31 +68,36 @@ h1 {
   color: black;
 }
 </style>
-
 </head>
 
 <body>
 
 <h1>HTeam Map</h1>
 <div id="status">Đang tìm hotspot...</div>
+<button onclick="scan()">🔄 Scan lại</button>
 
 <div id="list"></div>
 
 <script>
-const GEMINI_API_KEY = "AIzaSyAnjhXXjS2KVPfyV5VsW_tMeJdUOCKWD8I";
+const GEMINI_API_KEY = "YOUR_API_KEY_HERE";
 
 let userLat, userLng;
 
-// GPS
-navigator.geolocation.getCurrentPosition(pos => {
-  userLat = pos.coords.latitude;
-  userLng = pos.coords.longitude;
-  loadPlaces();
-}, () => {
-  document.getElementById("status").innerHTML = "Không lấy được GPS ❌";
-});
+// ===== SCAN =====
+function scan() {
+  document.getElementById("status").innerHTML = "Đang quét lại...";
+  document.getElementById("list").innerHTML = "";
 
-// Lấy dữ liệu OSM
+  navigator.geolocation.getCurrentPosition(pos => {
+    userLat = pos.coords.latitude;
+    userLng = pos.coords.longitude;
+    loadPlaces();
+  }, () => {
+    document.getElementById("status").innerHTML = "Không lấy được GPS ❌";
+  });
+}
+
+// ===== LOAD DATA =====
 async function loadPlaces() {
   const query = `
   [out:json];
@@ -95,25 +116,27 @@ async function loadPlaces() {
     });
 
     const data = await res.json();
-    const places = data.elements.filter(p => p.tags && p.tags.name).slice(0, 15);
+    const places = data.elements.filter(p => p.tags && p.tags.name).slice(0, 20);
 
     analyzeAI(places);
+
   } catch {
     document.getElementById("status").innerHTML = "Lỗi tải dữ liệu ❌";
   }
 }
 
-// AI chọn hotspot
+// ===== AI =====
 async function analyzeAI(places) {
-  const names = places.map(p => p.tags.name);
-
   const prompt = `
-  Từ danh sách sau, chọn 5 địa điểm có khả năng đông người nhất:
-  ${names.join(", ")}
+Danh sách địa điểm:
 
-  Chỉ trả về JSON dạng:
-  [{"name":"..."}]
-  `;
+${places.map(p => `id:${p.id} - ${p.tags.name}`).join("\n")}
+
+Chọn 5 địa điểm đông người nhất.
+
+Trả JSON:
+[{"id":123}]
+`;
 
   try {
     const res = await fetch(
@@ -147,30 +170,25 @@ async function analyzeAI(places) {
   }
 }
 
-// render AI (fix match thông minh)
+// ===== RENDER =====
 function render(aiList, raw) {
   const list = document.getElementById("list");
   list.innerHTML = "";
   document.getElementById("status").innerHTML = "Hotspots found ✔";
 
   aiList.forEach((item, index) => {
-    const match = raw.find(p => {
-      const name = (p.tags.name || "").toLowerCase();
-      return name.includes(item.name.toLowerCase());
-    });
-
+    const match = raw.find(p => p.id == item.id);
     if (!match) return;
 
     createItem(match, index, list);
   });
 
-  // nếu AI fail quá nhiều thì fallback
   if (list.innerHTML === "") {
     renderFallback(raw);
   }
 }
 
-// fallback khi AI lỗi
+// ===== FALLBACK =====
 function renderFallback(raw) {
   const list = document.getElementById("list");
   list.innerHTML = "";
@@ -181,11 +199,27 @@ function renderFallback(raw) {
   });
 }
 
-// tạo item
+// ===== DISTANCE =====
+function getDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2-lat1) * Math.PI/180;
+  const dLon = (lon2-lon1) * Math.PI/180;
+  const a =
+    Math.sin(dLat/2)**2 +
+    Math.cos(lat1*Math.PI/180) *
+    Math.cos(lat2*Math.PI/180) *
+    Math.sin(dLon/2)**2;
+
+  return (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))).toFixed(2);
+}
+
+// ===== ITEM =====
 function createItem(p, index, list) {
+  const distance = getDistance(userLat, userLng, p.lat, p.lon);
+
   const div = document.createElement("div");
   div.className = "item";
-  div.innerHTML = `${index + 1}. ${p.tags.name}`;
+  div.innerHTML = `${index + 1}. ${p.tags.name} (${distance} km)`;
 
   div.onclick = () => {
     const url = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lon}`;
@@ -194,6 +228,9 @@ function createItem(p, index, list) {
 
   list.appendChild(div);
 }
+
+// chạy lần đầu
+scan();
 </script>
 
 </body>
