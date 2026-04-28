@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>HTeam Map</title>
+
+<style>
+body {
+  margin: 0;
+  background: black;
+  color: #00ff00;
+  font-family: monospace;
+  text-align: center;
+}
+
+/* TITLE */
+h1 {
+  font-size: 40px;
+  margin-top: 30px;
+  text-shadow: 0 0 15px #00ff00;
+}
+
+#status {
+  margin: 10px 0 30px;
+  font-size: 18px;
+}
+
+/* LIST */
+#list {
+  padding: 0 10px;
+}
+
+.item {
+  border: 2px solid #00ff00;
+  border-radius: 20px;
+  padding: 15px;
+  margin: 15px 0;
+  font-size: 20px;
+  text-align: left;
+  color: white;
+  box-shadow: 0 0 10px #00ff00;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.item:hover {
+  background: #00ff00;
+  color: black;
+}
+</style>
+
+</head>
+
+<body>
+
+<h1>HTeam Map</h1>
+<div id="status">Looking for a hot spot...</div>
+
+<div id="list"></div>
+
+<script>
+const GEMINI_API_KEY = "AIzaSyAnjhXXjS2KVPfyV5VsW_tMeJdUOCKWD8I";
+
+let userLat, userLng;
+
+// GPS
+navigator.geolocation.getCurrentPosition(pos => {
+  userLat = pos.coords.latitude;
+  userLng = pos.coords.longitude;
+  loadPlaces();
+}, () => {
+  document.getElementById("status").innerHTML = "Không lấy được GPS ❌";
+});
+
+// Lấy dữ liệu OSM
+async function loadPlaces() {
+  const query = `
+  [out:json];
+  (
+    node(around:1200,${userLat},${userLng})["amenity"="restaurant"];
+    node(around:1200,${userLat},${userLng})["amenity"="cafe"];
+    node(around:1200,${userLat},${userLng})["shop"];
+  );
+  out;
+  `;
+
+  const res = await fetch("https://overpass-api.de/api/interpreter", {
+    method: "POST",
+    body: query
+  });
+
+  const data = await res.json();
+  const places = data.elements.slice(0, 10);
+
+  analyzeAI(places);
+}
+
+// Gửi Gemini
+async function analyzeAI(places) {
+  const names = places.map(p => p.tags.name || "Unknown");
+
+  const prompt = `
+  Chọn 5 địa điểm đông người nhất từ danh sách:
+  ${names.join(", ")}
+
+  Trả JSON:
+  [{"name":"..."}]
+  `;
+
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+    {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }]
+      })
+    }
+  );
+
+  const data = await res.json();
+  let text = data.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
+
+  text = text.replace(/```json|```/g, "");
+
+  let aiList = [];
+  try {
+    aiList = JSON.parse(text);
+  } catch {
+    document.getElementById("status").innerHTML = "AI lỗi ❌";
+    return;
+  }
+
+  render(aiList, places);
+}
+
+// Hiển thị
+function render(aiList, raw) {
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+  document.getElementById("status").innerHTML = "Hotspots found ✔";
+
+  aiList.forEach((item, index) => {
+    const match = raw.find(p => (p.tags.name || "") === item.name);
+    if (!match) return;
+
+    const lat = match.lat;
+    const lng = match.lon;
+
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `${index + 1}. ${item.name}`;
+
+    div.onclick = () => {
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+      window.open(url, "_blank");
+    };
+
+    list.appendChild(div);
+  });
+}
+</script>
+
+</body>
+</html>
