@@ -1,0 +1,12 @@
+{
+  "keys": [
+    {
+      "key": "admin",
+      "expire": "2500-12-31"
+    },
+    {
+      "key": "hteammap",
+      "expire": "2026-05-18"
+    }
+  ]
+}
