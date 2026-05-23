@@ -1,347 +1,46 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HTeam Map</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Warning</title>
 
-  <style>
-    body {
-      margin: 0;
-      background: black;
-      color: #00ff00;
-      font-family: monospace;
-      text-align: center;
+<style>
+    body{
+        margin:0;
+        height:100vh;
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        background:#000;
+        font-family:Arial, sans-serif;
     }
 
-    h1 {
-      font-size: 30px;
-      margin-top: 20px;
-      text-shadow: 0 0 10px #00ff00;
+    .warning-box{
+        border:2px solid #00ff66;
+        padding:30px 40px;
+        border-radius:12px;
+        text-align:center;
+        box-shadow:0 0 20px #00ff66;
     }
 
-    #status {
-      margin: 10px 0 5px;
-      font-size: 18px;
+    .warning-text{
+        color:#00ff66;
+        font-size:24px;
+        font-weight:bold;
+        text-shadow:0 0 10px #00ff66;
     }
-
-    #time {
-      font-size: 14px;
-      margin-bottom: 10px;
-      color: #00ffaa;
-    }
-
-    #list {
-      max-width: 500px;
-      margin: auto;
-      padding: 0 10px;
-    }
-
-    .item {
-      border: 2px solid #00ff00;
-      border-radius: 15px;
-      padding: 12px;
-      margin: 10px 0;
-      font-size: 16px;
-      text-align: left;
-      color: white;
-      box-shadow: 0 0 8px #00ff00;
-      cursor: pointer;
-      transition: background-color 0.3s ease, color 0.3s ease;
-    }
-
-    .item:active {
-      background-color: #00ff00;
-      color: black;
-    }
-
-    .module-link {
-      margin: 10px 0;
-      font-size: 18px;
-      display: block;
-      color: #00ff00;
-      text-decoration: none;
-      padding: 10px;
-      border: 2px solid #00ff00;
-      border-radius: 10px;
-      background-color: black;
-      transition: color 0.3s ease, background-color 0.3s ease;
-    }
-
-    .module-link:hover {
-      background-color: #00ff00;
-      color: black;
-    }
-
-    .container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      min-height: 100vh;
-      background-color: black;
-      border: 5px solid #00ff00;
-      border-radius: 15px;
-      padding: 20px;
-      box-sizing: border-box;
-    }
-
-    .module-container {
-      border: 2px solid #00ff00;
-      border-radius: 15px;
-      padding: 20px;
-      margin-top: 20px;
-      width: 80%;
-      box-shadow: 0 0 10px #00ff00;
-    }
-
-    /* ===== KEY SYSTEM ===== */
-
-    #keyScreen {
-      position: fixed;
-      inset: 0;
-      background: black;
-      z-index: 99999;
-
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    #keyBox {
-      width: 85%;
-      max-width: 350px;
-
-      border: 2px solid #00ff00;
-      border-radius: 20px;
-
-      padding: 25px;
-
-      box-shadow: 0 0 20px #00ff00;
-
-      background: #000;
-    }
-
-    #keyBox h2 {
-      margin: 0;
-      color: #00ff00;
-      text-shadow: 0 0 10px #00ff00;
-    }
-
-    #keyBox .ver {
-      margin-top: 5px;
-      color: #00ffaa;
-      font-size: 14px;
-      line-height: 1.5;
-    }
-
-    #keyBox .text {
-      margin-top: 20px;
-      margin-bottom: 10px;
-      color: #00ff00;
-    }
-
-    #keyInput {
-      width: 100%;
-      box-sizing: border-box;
-
-      padding: 12px;
-
-      border-radius: 12px;
-      border: 2px solid #00ff00;
-
-      background: black;
-      color: #00ff00;
-
-      outline: none;
-
-      font-size: 15px;
-      font-family: monospace;
-
-      box-shadow: 0 0 10px #00ff00;
-    }
-
-    #keyInput::placeholder {
-      color: #00aa00;
-    }
-
-    #keyBtn {
-      width: 100%;
-      margin-top: 15px;
-
-      padding: 12px;
-
-      border-radius: 15px;
-      border: 2px solid #00ff00;
-
-      background: black;
-      color: #00ff00;
-
-      font-size: 16px;
-      font-family: monospace;
-
-      cursor: pointer;
-
-      box-shadow: 0 0 10px #00ff00;
-    }
-
-    #keyBtn:active {
-      background: #00ff00;
-      color: black;
-    }
-
-    #keyStatus {
-      margin-top: 12px;
-      color: #00ffaa;
-      font-size: 14px;
-    }
-  </style>
+</style>
 </head>
 
 <body>
 
-  <!-- ===== KEY SCREEN ===== -->
-
-  <div id="keyScreen">
-    <div id="keyBox">
-
-      <h2>HTeam Map</h2>
-
-      <div class="ver">
-        Công cụ hỗ trợ điểm đứng nổ đơn cho tài xế xanh sm bike<br>
-        Đã cập nhật lựa chọn setup ngày và đêm<br>
-        admin: Nguyễn Việt Hùng<br>
-        zl: 0387675932<br>
-        Ver: 1.2.0
-      </div>
-
-      <div class="text">
-        Nhập key để sử dụng:
-      </div>
-
-      <input type="text" id="keyInput" placeholder="Nhập key...">
-
-      <button id="keyBtn">
-        Xác nhận
-      </button>
-
-      <div id="keyStatus"></div>
-
+<div class="warning-box">
+    <div class="warning-text">
+        WARNING<br><br>
+        Hệ thống đang bảo trì để cập nhật
     </div>
-  </div>
-
-  <!-- ===== MAIN APP ===== -->
-
-  <div class="container">
-
-    <h1>HTeam Map</h1>
-
-    <div id="status">
-      Chọn mục để xem các vị trí!
-    </div>
-
-    <div id="time"></div>
-
-    <div class="module-container">
-
-      <h2>Menu chính</h2>
-
-      <a href="route.html" class="module-link">Tuyến đường kiếm đơn</a>
-
-      <a href="synthetic.html" class="module-link">Tổng Hợp</a>
-
-      <a href="noti.html" class="module-link">Thông Báo</a>
-
-      <a href="event.html" class="module-link">Sự Kiện</a>
-
-      <a href="weather.html" class="module-link">Dự Báo Thời Tiết</a>
-
-      <a href="tool.html" class="module-link">Công cụ</a>
-
-    </div>
-
-  </div>
-
-  <script>
-
-    // ===== KEY SYSTEM =====
-
-    const KEY_FILE =
-    "https://raw.githubusercontent.com/hteammap/hteamsm/main/keys.json";
-
-    async function checkKey() {
-
-      const key =
-      document.getElementById("keyInput").value.trim();
-
-      if (!key) {
-
-        document.getElementById("keyStatus").innerHTML =
-        "Vui lòng nhập key";
-
-        return;
-      }
-
-      document.getElementById("keyStatus").innerHTML =
-      "Đang kiểm tra key...";
-
-      try {
-
-        const res = await fetch(KEY_FILE);
-
-        const data = await res.json();
-
-        const found =
-        data.keys.find(k => k.key === key);
-
-        if (!found) {
-
-          document.getElementById("keyStatus").innerHTML =
-          "Key không đúng ❌";
-
-          return;
-        }
-
-        // ===== CHECK EXPIRE =====
-
-        const today = new Date();
-
-        const expireDate =
-        new Date(found.expire);
-
-        if (today > expireDate) {
-
-          document.getElementById("keyStatus").innerHTML =
-          "Key đã hết hạn ❌";
-
-          return;
-        }
-
-        // ===== SUCCESS =====
-
-        document.getElementById("keyStatus").innerHTML =
-        `Key hợp lệ ✅ HSD: ${found.expire}`;
-
-        setTimeout(() => {
-
-          document.getElementById("keyScreen").style.display =
-          "none";
-
-        }, 1000);
-
-      } catch {
-
-        document.getElementById("keyStatus").innerHTML =
-        "Lỗi kết nối server ❌";
-
-      }
-
-    }
-
-    document.getElementById("keyBtn").onclick =
-    checkKey;
-
-  </script>
+</div>
 
 </body>
 </html>
