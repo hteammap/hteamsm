@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sự kiện</title>
+
+  <style>
+
+    body {
+      margin: 0;
+      background: black;
+      color: #00ff00;
+      font-family: monospace;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 26px;
+      margin-top: 20px;
+      text-shadow: 0 0 10px #00ff00;
+    }
+
+    #status {
+      margin-top: 10px;
+      color: #00ffaa;
+      font-size: 14px;
+    }
+
+    #time {
+      margin-top: 5px;
+      margin-bottom: 20px;
+      color: #00ffaa;
+      font-size: 13px;
+    }
+
+    #eventBox {
+
+      width: 90%;
+      max-width: 650px;
+
+      margin: auto;
+
+      border: 2px solid #00ff00;
+      border-radius: 20px;
+
+      padding: 15px;
+
+      box-shadow: 0 0 15px #00ff00;
+
+      text-align: left;
+
+      background: #000;
+
+    }
+
+    .event {
+
+      border: 2px solid #00ff00;
+      border-radius: 15px;
+
+      padding: 15px;
+
+      margin-bottom: 18px;
+
+      box-shadow: 0 0 8px #00ff00;
+
+    }
+
+    .event-title {
+
+      font-size: 18px;
+
+      color: #00ff00;
+
+      margin-bottom: 10px;
+
+      text-shadow: 0 0 5px #00ff00;
+
+    }
+
+    .event-date {
+
+      color: #00ffaa;
+
+      font-size: 12px;
+
+      margin-bottom: 12px;
+
+    }
+
+    .event-text {
+
+      color: white;
+
+      line-height: 1.7;
+
+      font-size: 14px;
+
+    }
+
+    .bank-box {
+
+      margin-top: 15px;
+
+      border: 2px solid #00ffaa;
+
+      border-radius: 12px;
+
+      padding: 12px;
+
+      background: rgba(0,255,0,0.05);
+
+      color: #00ffaa;
+
+      font-size: 14px;
+
+      line-height: 1.7;
+
+    }
+
+    #backBtn {
+
+      margin: 20px auto 30px;
+
+      display: block;
+
+      padding: 12px 20px;
+
+      font-size: 16px;
+
+      border: 2px solid #00ff00;
+      border-radius: 20px;
+
+      background: black;
+      color: #00ff00;
+
+      cursor: pointer;
+
+      box-shadow: 0 0 10px #00ff00;
+
+      font-family: monospace;
+
+    }
+
+    #backBtn:active {
+
+      background: #00ff00;
+      color: black;
+
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <h1>Sự kiện</h1>
+
+  <div id="status">
+    Sự kiện cộng đồng HTeam Map
+  </div>
+
+  <div id="time"></div>
+
+  <div id="eventBox">
+
+    <div class="event">
+
+      <div class="event-title">
+        ❤️ Chuyến xe tình thương
+      </div>
+
+      <div class="event-date">Số km hiện tại: 0 Km<br>
+        Bắt đầu: 22/05/2026 - 20:00
+      </div>
+
+      <div class="event-text">
+
+        Chương trình hỗ trợ cộng đồng dành cho các hoàn cảnh khó khăn.
+
+        <br><br>
+
+        Với mỗi 5000đ được chuyển vào quỹ chương trình,
+        hệ thống sẽ hỗ trợ thêm 2km quãng đường miễn phí
+        cho người gặp khó khăn cần di chuyển.
+
+        <br><br>
+
+        Mục tiêu:
+        hỗ trợ người già,
+        người bệnh,
+        sinh viên khó khăn,
+        người lao động cần giúp đỡ di chuyển trong thành phố.
+
+      </div>
+
+      <div class="bank-box">
+
+        Ngân hàng: MB Bank<br>
+
+        STK: 8766612345<br>
+
+        Chủ tài khoản: NGUYEN VIET HUNG
+        Nội dung: chuyến xe tình thương
+
+      </div>
+
+    </div>
+
+    <div class="event">
+
+      <div class="event-title">
+        🌙 Hỗ trợ tài xế chạy đêm
+      </div>
+
+      <div class="event-date">
+        22/05/2026 - 22:30
+      </div>
+
+      <div class="event-text">
+
+        HTeam Map đang phát triển thêm các tuyến đường
+        tối ưu chạy đêm giúp tài xế giảm thời gian chạy rỗng
+        và tăng khả năng nổ đơn liên tục.
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <button id="backBtn">
+    ⬅ Quay lại menu
+  </button>
+
+  <script>
+
+    // ===== TIME =====
+
+    function updateTime() {
+
+      const now = new Date();
+
+      const time =
+      now.toLocaleString("vi-VN");
+
+      document.getElementById("time").innerHTML =
+      "Hiện tại: " + time;
+
+    }
+
+    updateTime();
+
+    setInterval(updateTime, 1000);
+
+    // ===== BACK BUTTON =====
+
+    document.getElementById("backBtn").onclick = () => {
+
+      window.location.href = "index.html";
+
+    };
+
+  </script>
+
+</body>
+</html>

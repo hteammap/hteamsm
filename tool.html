@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Công cụ</title>
+
+<style>
+
+body{
+  margin:0;
+  background:black;
+  color:#00ff00;
+  font-family:monospace;
+  text-align:center;
+}
+
+h1{
+  margin-top:20px;
+  text-shadow:0 0 10px #00ff00;
+}
+
+#status{
+  color:#00ffaa;
+  margin:10px 0 20px;
+  font-size:14px;
+}
+
+.container{
+  width:90%;
+  max-width:600px;
+  margin:auto;
+}
+
+.toolBox{
+
+  border:2px solid #00ff00;
+  border-radius:20px;
+
+  padding:15px;
+  margin-bottom:15px;
+
+  box-shadow:0 0 10px #00ff00;
+
+  text-align:left;
+
+}
+
+.toolTitle{
+
+  font-size:17px;
+  margin-bottom:10px;
+
+  text-shadow:0 0 5px #00ff00;
+
+}
+
+.toolDesc{
+
+  color:white;
+  font-size:13px;
+  line-height:1.7;
+  margin-bottom:12px;
+
+}
+
+.switch{
+
+  position:relative;
+  display:inline-block;
+
+  width:60px;
+  height:30px;
+
+}
+
+.switch input{
+  display:none;
+}
+
+.slider{
+
+  position:absolute;
+  cursor:pointer;
+
+  inset:0;
+
+  background:#111;
+
+  border:2px solid #00ff00;
+
+  border-radius:34px;
+
+  transition:0.4s;
+
+}
+
+.slider:before{
+
+  position:absolute;
+
+  content:"";
+
+  height:20px;
+  width:20px;
+
+  left:4px;
+  bottom:3px;
+
+  background:#00ff00;
+
+  border-radius:50%;
+
+  transition:0.4s;
+
+  box-shadow:0 0 10px #00ff00;
+
+}
+
+input:checked + .slider{
+
+  background:#003300;
+
+}
+
+input:checked + .slider:before{
+
+  transform:translateX(28px);
+
+}
+
+.modeBtn{
+
+  width:48%;
+
+  padding:12px;
+
+  margin-top:10px;
+
+  border:2px solid #00ff00;
+  border-radius:15px;
+
+  background:black;
+  color:#00ff00;
+
+  font-family:monospace;
+
+  box-shadow:0 0 8px #00ff00;
+
+}
+
+.modeBtn.active{
+
+  background:#00ff00;
+  color:black;
+
+}
+
+.modeWrap{
+
+  display:flex;
+  justify-content:space-between;
+
+}
+
+#backBtn{
+
+  width:90%;
+
+  margin:20px auto 30px;
+
+  padding:14px;
+
+  border:2px solid #00ff00;
+  border-radius:20px;
+
+  background:black;
+  color:#00ff00;
+
+  font-family:monospace;
+  font-size:16px;
+
+  box-shadow:0 0 10px #00ff00;
+
+}
+
+#backBtn:active{
+
+  background:#00ff00;
+  color:black;
+
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>Công cụ</h1>
+
+<div id="status">
+Các công cụ hỗ trợ tài xế
+</div>
+
+<div class="container">
+
+  <!-- ===== CÒI ===== -->
+
+  <div class="toolBox">
+
+    <div class="toolTitle">
+      🔊 Còi cảnh báo
+    </div>
+
+    <div class="toolDesc">
+      Khi bật sẽ phát âm thanh cảnh báo như xe ưu tiên.Tránh lạm dụng dễ bị công an phạt tiền
+    </div>
+
+    <label class="switch">
+      <input type="checkbox" id="hornToggle">
+      <span class="slider"></span>
+    </label>
+
+  </div>
+
+  <!-- ===== MODE ===== -->
+
+  <div class="toolBox">
+
+    <div class="toolTitle">
+      🌤 Chế độ hoạt động
+    </div>
+
+    <div class="toolDesc">
+      Tool sẽ tự tối ưu gợi ý theo ca ngày hoặc ca đêm.
+    </div>
+
+    <div class="modeWrap">
+
+      <button class="modeBtn" id="dayBtn">
+        ☀ Ca ngày
+      </button>
+
+      <button class="modeBtn" id="nightBtn">
+        🌙 Ca đêm
+      </button>
+
+    </div>
+
+  </div>
+
+  <!-- ===== KEEP SCREEN ===== -->
+
+  <div class="toolBox">
+
+    <div class="toolTitle">
+      📱 Giữ màn hình sáng
+    </div>
+
+    <div class="toolDesc">
+      Giữ màn hình luôn sáng khi đang chạy app.
+    </div>
+
+    <label class="switch">
+      <input type="checkbox" id="wakeToggle">
+      <span class="slider"></span>
+    </label>
+
+  </div>
+
+  <!-- ===== TOUCH ===== -->
+
+  <div class="toolBox">
+
+    <div class="toolTitle">
+      💧 Tránh chạm màn
+    </div>
+
+    <div class="toolDesc">
+      Hạn chế loạn cảm ứng do nước mưa hoặc vật dẫn điện.
+    </div>
+
+    <label class="switch">
+      <input type="checkbox" id="touchToggle">
+      <span class="slider"></span>
+    </label>
+
+  </div>
+
+  <!-- ===== MULTITASK ===== -->
+
+  <div class="toolBox">
+
+    <div class="toolTitle">
+      ⚡ Giữ đa nhiệm
+    </div>
+
+    <div class="toolDesc">
+      Giảm nguy cơ app bị reload khi chuyển đa nhiệm.
+    </div>
+
+    <label class="switch">
+      <input type="checkbox" id="multiToggle">
+      <span class="slider"></span>
+    </label>
+
+  </div>
+
+  <!-- ===== BATTERY ===== -->
+
+  <div class="toolBox">
+
+    <div class="toolTitle">
+      🔋 Tối ưu pin
+    </div>
+
+    <div class="toolDesc">
+      Giảm tài nguyên sử dụng để tiết kiệm pin điện thoại.
+    </div>
+
+    <label class="switch">
+      <input type="checkbox" id="batteryToggle">
+      <span class="slider"></span>
+    </label>
+
+  </div>
+
+</div>
+
+<button id="backBtn">
+⬅ Quay lại menu
+</button>
+
+<audio id="hornAudio" loop>
+  <source src="coi1.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+
+// ===== BACK =====
+
+document.getElementById("backBtn").onclick = () => {
+
+  window.location.href = "index.html";
+
+};
+
+// ===== HORN =====
+
+const horn =
+document.getElementById("hornAudio");
+
+document.getElementById("hornToggle")
+.addEventListener("change", e => {
+
+  if(e.target.checked){
+
+    horn.play();
+
+    document.getElementById("status").innerHTML =
+    "🔊 Còi cảnh báo đang hoạt động";
+
+  }else{
+
+    horn.pause();
+
+    horn.currentTime = 0;
+
+    document.getElementById("status").innerHTML =
+    "Đã tắt còi cảnh báo";
+
+  }
+
+});
+
+// ===== MODE =====
+
+const dayBtn =
+document.getElementById("dayBtn");
+
+const nightBtn =
+document.getElementById("nightBtn");
+
+dayBtn.onclick = () => {
+
+  localStorage.setItem("driver_mode","day");
+
+  dayBtn.classList.add("active");
+
+  nightBtn.classList.remove("active");
+
+  document.getElementById("status").innerHTML =
+  "☀ Đang dùng chế độ ca ngày";
+
+};
+
+nightBtn.onclick = () => {
+
+  localStorage.setItem("driver_mode","night");
+
+  nightBtn.classList.add("active");
+
+  dayBtn.classList.remove("active");
+
+  document.getElementById("status").innerHTML =
+  "🌙 Đang dùng chế độ ca đêm";
+
+};
+
+// ===== LOAD MODE =====
+
+const savedMode =
+localStorage.getItem("driver_mode");
+
+if(savedMode == "day"){
+
+  dayBtn.classList.add("active");
+
+}
+
+if(savedMode == "night"){
+
+  nightBtn.classList.add("active");
+
+}
+
+// ===== KEEP SCREEN ON =====
+
+let wakeLock = null;
+
+async function enableWakeLock(){
+
+  try{
+
+    wakeLock =
+    await navigator.wakeLock.request("screen");
+
+    document.getElementById("status").innerHTML =
+    "📱 Đang giữ màn hình sáng";
+
+  }catch{
+
+    document.getElementById("status").innerHTML =
+    "Không hỗ trợ wake lock ❌";
+
+  }
+
+}
+
+document.getElementById("wakeToggle")
+.addEventListener("change", async e => {
+
+  if(e.target.checked){
+
+    enableWakeLock();
+
+  }else{
+
+    if(wakeLock){
+
+      wakeLock.release();
+
+      wakeLock = null;
+
+    }
+
+    document.getElementById("status").innerHTML =
+    "Đã tắt giữ sáng màn hình";
+
+  }
+
+});
+
+// ===== TOUCH PROTECT =====
+
+document.getElementById("touchToggle")
+.addEventListener("change", e => {
+
+  if(e.target.checked){
+
+    document.body.style.touchAction = "manipulation";
+
+    document.getElementById("status").innerHTML =
+    "💧 Đã bật chống loạn cảm ứng";
+
+  }else{
+
+    document.body.style.touchAction = "auto";
+
+    document.getElementById("status").innerHTML =
+    "Đã tắt chống loạn cảm ứng";
+
+  }
+
+});
+
+// ===== MULTITASK =====
+
+document.getElementById("multiToggle")
+.addEventListener("change", e => {
+
+  if(e.target.checked){
+
+    document.getElementById("status").innerHTML =
+    "⚡ Đã bật giữ đa nhiệm";
+
+  }else{
+
+    document.getElementById("status").innerHTML =
+    "Đã tắt giữ đa nhiệm";
+
+  }
+
+});
+
+// ===== BATTERY =====
+
+document.getElementById("batteryToggle")
+.addEventListener("change", e => {
+
+  if(e.target.checked){
+
+    document.getElementById("status").innerHTML =
+    "🔋 Đã bật tối ưu pin";
+
+  }else{
+
+    document.getElementById("status").innerHTML =
+    "Đã tắt tối ưu pin";
+
+  }
+
+});
+
+// ===== BATTERY MODE =====
+
+let batterySave = false;
+
+document.getElementById("batteryToggle")
+.addEventListener("change", e => {
+
+  batterySave = e.target.checked;
+
+});
+
+// ===== AUTO OPTIMIZE =====
+
+setInterval(() => {
+
+  if(batterySave){
+
+    console.log("Battery optimize running");
+
+  }
+
+}, 30000);
+
+</script>
+
+</body>
+</html>

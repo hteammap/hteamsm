@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tuyến đường nổ đơn</title>
+
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      color: #00ff00;
+      font-family: monospace;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-top: 20px;
+      text-shadow: 0 0 10px #00ff00;
+    }
+
+    #status {
+      margin: 10px 0 5px;
+      font-size: 14px;
+    }
+
+    #time {
+      font-size: 13px;
+      margin-bottom: 10px;
+      color: #00ffaa;
+    }
+
+    #list {
+      max-width: 500px;
+      margin: auto;
+      padding: 0 10px;
+    }
+
+    .item {
+      border: 2px solid #00ff00;
+      border-radius: 15px;
+      padding: 12px;
+      margin: 10px 0;
+      font-size: 16px;
+      text-align: left;
+      color: white;
+      box-shadow: 0 0 8px #00ff00;
+      cursor: pointer;
+    }
+
+    .item:active {
+      background: #00ff00;
+      color: black;
+    }
+
+    #scanBtn,
+    #backBtn {
+      margin: 15px auto;
+      display: block;
+      padding: 12px 20px;
+      font-size: 16px;
+      border: 2px solid #00ff00;
+      border-radius: 20px;
+      background: black;
+      color: #00ff00;
+      cursor: pointer;
+      box-shadow: 0 0 10px #00ff00;
+      font-family: monospace;
+    }
+
+    #scanBtn:active,
+    #backBtn:active {
+      background: #00ff00;
+      color: black;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <h1>Tuyến đường nổ đơn</h1>
+
+  <div id="status">
+    Đang quét tuyến đường...
+  </div>
+
+  <div id="time"></div>
+
+  <div id="list"></div>
+
+  <button id="scanBtn">
+    🔄 Scan lại
+  </button>
+
+  <button id="backBtn">
+    ⬅ Quay lại menu
+  </button>
+
+  <script src="script.js"></script>
+
+  <script>
+
+    // ===== BACK BUTTON =====
+
+    document.getElementById("backBtn").onclick = () => {
+
+      window.location.href = "index.html";
+
+    };
+
+    // ===== LOAD DATA =====
+
+    async function loadPlaces() {
+
+      const timeInfo = getTimeInfo();
+
+      const offset =
+      (Math.random() - 0.5) * 0.003;
+
+      const lat = userLat + offset;
+      const lng = userLng + offset;
+
+      const query = `
+      [out:json];
+      (
+        node(around:5000,${lat},${lng})["highway"];
+        node(around:5000,${lat},${lng})["amenity"="restaurant"];
+        node(around:5000,${lat},${lng})["amenity"="fast_food"];
+        node(around:5000,${lat},${lng})["amenity"="cafe"];
+        node(around:5000,${lat},${lng})["amenity"="hospital"];
+        node(around:5000,${lat},${lng})["amenity"="bus_station"];
+        node(around:5000,${lat},${lng})["shop"="mall"];
+
+        way(around:5000,${lat},${lng})["highway"];
+        way(around:5000,${lat},${lng})["amenity"="restaurant"];
+        way(around:5000,${lat},${lng})["shop"="mall"];
+      );
+      out center;
+      `;
+
+      try {
+
+        const res = await fetch(
+          "https://overpass-api.de/api/interpreter",
+          {
+            method: "POST",
+            body: query
+          }
+        );
+
+        const data = await res.json();
+
+        let places =
+        data.elements
+        .filter(p => p.tags && p.tags.name)
+        .slice(0, 80);
+
+        shuffle(places);
+
+        analyzeAI(places, timeInfo);
+
+      } catch {
+
+        document.getElementById("status").innerHTML =
+        "Lỗi tải dữ liệu ❌";
+
+      }
+
+    }
+
+    // ===== AI =====
+
+    async function analyzeAI(places, timeInfo) {
+
+      const prompt = `
+Bạn là tài xế Xanh SM Bike nhiều kinh nghiệm chạy Hà Nội.
+
+Thời gian hiện tại:
+${timeInfo.full}
+
+Nhiệm vụ:
+Hãy chọn các địa điểm tạo thành 1 TUYẾN ĐƯỜNG DI CHUYỂN khoảng 5km giúp tài xế dễ NỔ ĐƠN NHẤT.
+
+⚠️ QUAN TRỌNG:
+- Không chọn ngẫu nhiên.
+- Phải tư duy như tài xế thật đang chạy ngoài đường.
+- Tuyến đường phải hợp lý để chạy liên tục.
+- Ưu tiên đường lớn đông người.
+- Ưu tiên nơi dễ có khách gọi xe.
+- Ưu tiên:
+  + quán ăn đông
+  + bệnh viện
+  + bến xe
+  + khu dân cư
+  + khu vui chơi
+  + ngã tư lớn
+  + khu sinh viên
+  + tuyến phố đông người
+
+Sau 22h:
+- Hạn chế quán cafe yên tĩnh.
+- Tránh nơi vắng người.
+- Ưu tiên quán ăn đêm còn hoạt động.
+
+Mục tiêu:
+Tạo tuyến chạy thực tế khoảng 5km để tài xế vừa di chuyển vừa dễ nhận đơn liên tục.
+
+Danh sách địa điểm:
+${places.map(p =>
+`id:${p.id} - ${p.tags.name}`
+).join("\n")}
+
+Chỉ trả JSON theo đúng format:
+[
+  {"id":123},
+  {"id":456},
+  {"id":789}
+]
+`;
+
+      try {
+
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              contents: [
+                {
+                  parts: [
+                    {
+                      text: prompt
+                    }
+                  ]
+                }
+              ]
+            })
+          }
+        );
+
+        const data = await res.json();
+
+        let text =
+        data.candidates?.[0]?.content?.parts?.[0]?.text
+        || "[]";
+
+        text =
+        text.replace(/```json|```/g, "").trim();
+
+        let aiList =
+        JSON.parse(text);
+
+        render(aiList, places);
+
+      } catch {
+
+        renderFallback(places);
+
+      }
+
+    }
+
+    // ===== RENDER =====
+
+    function render(aiList, raw) {
+
+      const list =
+      document.getElementById("list");
+
+      list.innerHTML = "";
+
+      aiList.forEach((item, index) => {
+
+        const match =
+        raw.find(p => p.id == item.id);
+
+        if (!match) return;
+
+        createItem(match, index, list);
+
+      });
+
+      document.getElementById("status").innerHTML =
+      "Tuyến đường dễ nổ đơn 🔥";
+
+    }
+
+    // ===== FALLBACK =====
+
+    function renderFallback(raw) {
+
+      const list =
+      document.getElementById("list");
+
+      list.innerHTML = "";
+
+      raw.slice(0, 10).forEach((p, index) => {
+
+        createItem(p, index, list);
+
+      });
+
+      document.getElementById("status").innerHTML =
+      "Tuyến gần bạn 📍";
+
+    }
+
+    // ===== CREATE ITEM =====
+
+    function createItem(p, index, list) {
+
+      const lat =
+      p.lat || p.center?.lat;
+
+      const lng =
+      p.lon || p.center?.lon;
+
+      if (!lat || !lng) return;
+
+      let icon = "📍";
+
+      if (p.tags.amenity === "hospital")
+        icon = "🏥";
+
+      else if (p.tags.amenity === "restaurant")
+        icon = "🍜";
+
+      else if (p.tags.amenity === "cafe")
+        icon = "☕";
+
+      else if (p.tags.shop === "mall")
+        icon = "🏢";
+
+      else if (p.tags.amenity === "bus_station")
+        icon = "🚌";
+
+      const div =
+      document.createElement("div");
+
+      div.className = "item";
+
+      div.innerHTML =
+      `${index + 1}. ${icon} ${p.tags.name}`;
+
+      div.onclick = () => {
+
+        window.open(
+          `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
+          "_blank"
+        );
+
+      };
+
+      list.appendChild(div);
+
+    }
+
+  </script>
+
+</body>
+</html>

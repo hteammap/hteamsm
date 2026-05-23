@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dự báo thời tiết</title>
+
+  <style>
+
+    body{
+      margin:0;
+      background:black;
+      color:#00ff00;
+      font-family:monospace;
+      padding:15px;
+    }
+
+    h1{
+      text-align:center;
+      text-shadow:0 0 10px #00ff00;
+      margin-top:10px;
+    }
+
+    #status{
+      text-align:center;
+      color:#00ffaa;
+      margin-bottom:15px;
+      font-size:14px;
+    }
+
+    .card{
+
+      border:2px solid #00ff00;
+      border-radius:20px;
+
+      padding:15px;
+      margin-bottom:15px;
+
+      box-shadow:0 0 10px #00ff00;
+
+      background:#000;
+
+    }
+
+    .title{
+      font-size:18px;
+      margin-bottom:10px;
+      color:#00ff00;
+      text-shadow:0 0 5px #00ff00;
+    }
+
+    .bigTemp{
+      font-size:55px;
+      text-align:center;
+      margin:10px 0;
+      color:#00ffaa;
+      text-shadow:0 0 10px #00ffaa;
+    }
+
+    .weatherText{
+      text-align:center;
+      font-size:18px;
+      margin-bottom:10px;
+      color:white;
+    }
+
+    .row{
+      display:flex;
+      justify-content:space-between;
+      margin:8px 0;
+      color:white;
+      gap:10px;
+    }
+
+    .miniCard{
+
+      width:48%;
+
+      border:2px solid #00ff00;
+      border-radius:18px;
+
+      padding:15px;
+
+      box-sizing:border-box;
+
+      box-shadow:0 0 8px #00ff00;
+
+      background:#000;
+
+    }
+
+    .grid{
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .hourItem{
+
+      border:2px solid #00ff00;
+
+      border-radius:15px;
+
+      padding:10px;
+
+      min-width:90px;
+
+      text-align:center;
+
+      box-shadow:0 0 6px #00ff00;
+
+      background:black;
+
+      flex-shrink:0;
+
+    }
+
+    .hourWrap{
+      display:flex;
+      overflow-x:auto;
+      gap:10px;
+      padding-bottom:5px;
+    }
+
+    .forecastItem{
+
+      border:2px solid #00ff00;
+
+      border-radius:15px;
+
+      padding:12px;
+
+      margin-bottom:10px;
+
+      box-shadow:0 0 6px #00ff00;
+
+      color:white;
+
+    }
+
+    #backBtn{
+
+      width:100%;
+
+      margin-top:20px;
+
+      padding:14px;
+
+      border-radius:20px;
+
+      border:2px solid #00ff00;
+
+      background:black;
+
+      color:#00ff00;
+
+      font-size:16px;
+
+      font-family:monospace;
+
+      box-shadow:0 0 10px #00ff00;
+
+    }
+
+    #backBtn:active{
+      background:#00ff00;
+      color:black;
+    }
+
+  </style>
+</head>
+
+<body>
+
+<h1>Dự báo thời tiết</h1>
+
+<div id="status">
+Đang phân tích thời tiết khu vực...
+</div>
+
+<div id="weatherBox"></div>
+
+<button id="backBtn">
+⬅ Quay lại menu
+</button>
+
+<script>
+
+const WEATHER_API =
+"https://api.open-meteo.com/v1/forecast";
+
+const AIR_API =
+"https://air-quality-api.open-meteo.com/v1/air-quality";
+
+function weatherText(code){
+
+  if(code == 0) return "☀ Trời quang";
+  if(code <= 3) return "⛅ Có mây";
+  if(code <= 48) return "🌫 Sương mù";
+  if(code <= 67) return "🌧 Mưa";
+  if(code <= 77) return "❄ Mưa lạnh";
+  if(code <= 82) return "🌦 Mưa rào";
+  if(code <= 99) return "⛈ Giông";
+
+  return "Không rõ";
+
+}
+
+function uvText(uv){
+
+  if(uv <= 2) return "Thấp";
+  if(uv <= 5) return "Trung bình";
+  if(uv <= 7) return "Cao";
+  if(uv <= 10) return "Rất cao";
+
+  return "Cực mạnh";
+
+}
+
+function airText(aqi){
+
+  if(aqi <= 50) return "Tốt";
+  if(aqi <= 100) return "Trung bình";
+  if(aqi <= 150) return "Kém";
+  if(aqi <= 200) return "Xấu";
+
+  return "Rất xấu";
+
+}
+
+function getSuggestion(temp, rain, hour){
+
+  if(rain > 60){
+
+    return `
+    🌧 Khả năng mưa cao.
+    Dễ tăng đơn vào giờ tan tầm và đặt xe trú mưa.
+    Nên ưu tiên:
+    bệnh viện,
+    trung tâm thương mại,
+    quán ăn đông.
+    `;
+
+  }
+
+  if(temp >= 38){
+
+    return `
+    🔥 Nhiệt độ mặt đường rất cao.
+    Nên ưu tiên đứng:
+    dưới bóng cây,
+    TTTM,
+    bệnh viện,
+    bến xe có mái che.
+    `;
+
+  }
+
+  if(hour >= 18 && hour <= 22){
+
+    return `
+    🚦 Giờ cao điểm tối.
+    Khả năng nổ đơn cao tại:
+    quán ăn,
+    khu vui chơi,
+    bến xe,
+    phố đông dân.
+    `;
+
+  }
+
+  if(hour >= 23 || hour <= 5){
+
+    return `
+    🌙 Ca đêm.
+    Nên ưu tiên:
+    bệnh viện,
+    quán ăn đêm,
+    ngã tư lớn,
+    khu dân cư đông.
+    `;
+
+  }
+
+  return `
+  🚗 Điều kiện chạy xe khá ổn.
+  Nên di chuyển liên tục ở các tuyến phố lớn để tăng khả năng nhận đơn.
+  `;
+
+}
+
+async function loadWeather(){
+
+  navigator.geolocation.getCurrentPosition(async pos => {
+
+    const lat = pos.coords.latitude;
+    const lng = pos.coords.longitude;
+
+    try{
+
+      document.getElementById("status").innerHTML =
+      "Đang cập nhật dữ liệu thời tiết realtime...";
+
+      // ===== WEATHER =====
+
+      const weatherUrl =
+      `${WEATHER_API}?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,weather_code,uv_index,precipitation_probability&hourly=temperature_2m,weather_code,wind_speed_10m,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&forecast_days=5&timezone=auto`;
+
+      const weatherRes =
+      await fetch(weatherUrl);
+
+      const weatherData =
+      await weatherRes.json();
+
+      // ===== AIR =====
+
+      const airUrl =
+      `${AIR_API}?latitude=${lat}&longitude=${lng}&hourly=us_aqi`;
+
+      const airRes =
+      await fetch(airUrl);
+
+      const airData =
+      await airRes.json();
+
+      renderWeather(weatherData, airData);
+
+    }catch{
+
+      document.getElementById("status").innerHTML =
+      "Không tải được dữ liệu ❌";
+
+    }
+
+  }, () => {
+
+    document.getElementById("status").innerHTML =
+    "Không lấy được GPS ❌";
+
+  });
+
+}
+
+function renderWeather(data, airData){
+
+  const box =
+  document.getElementById("weatherBox");
+
+  const current =
+  data.current;
+
+  const hourly =
+  data.hourly;
+
+  const daily =
+  data.daily;
+
+  const aqi =
+  airData.hourly.us_aqi[0];
+
+  const now =
+  new Date();
+
+  const hour =
+  now.getHours();
+
+  const suggestion =
+  getSuggestion(
+    current.temperature_2m,
+    hourly.precipitation_probability[0],
+    hour
+  );
+
+  box.innerHTML = `
+
+  <div class="card">
+
+    <div class="title">
+      📍 Vị trí hiện tại
+    </div>
+
+    <div style="color:#00ffaa;">
+      ${now.toLocaleString("vi-VN")}
+    </div>
+
+    <div class="bigTemp">
+      ${Math.round(current.temperature_2m)}°
+    </div>
+
+    <div class="weatherText">
+      ${weatherText(current.weather_code)}
+    </div>
+
+    <div class="row">
+      <div>🌡 Cảm giác như</div>
+      <div>${Math.round(current.apparent_temperature)}°</div>
+    </div>
+
+    <div class="row">
+      <div>💧 Độ ẩm</div>
+      <div>${current.relative_humidity_2m}%</div>
+    </div>
+
+    <div class="row">
+      <div>💨 Gió</div>
+      <div>${current.wind_speed_10m} km/h</div>
+    </div>
+
+    <div class="row">
+      <div>☀ UV</div>
+      <div>
+        ${current.uv_index}
+        (${uvText(current.uv_index)})
+      </div>
+    </div>
+
+    <div class="row">
+      <div>🌧 Khả năng mưa</div>
+      <div>
+        ${hourly.precipitation_probability[0]}%
+      </div>
+    </div>
+
+    <div class="row">
+      <div>🌫 Chất lượng không khí</div>
+      <div>
+        ${airText(aqi)}
+      </div>
+    </div>
+
+  </div>
+
+  <div class="card">
+
+    <div class="title">
+      🚗 Gợi ý cho tài xế
+    </div>
+
+    <div style="
+      color:white;
+      line-height:1.8;
+      font-size:15px;
+    ">
+      ${suggestion}
+    </div>
+
+  </div>
+
+  <div class="card">
+
+    <div class="title">
+      🕒 Dự báo 24 giờ
+    </div>
+
+    <div class="hourWrap">
+
+      ${hourly.time.slice(0,24).map((t,i)=>`
+
+      <div class="hourItem">
+
+        <div>
+          ${new Date(t).getHours()}h
+        </div>
+
+        <div style="
+          margin:10px 0;
+          color:white;
+          font-size:20px;
+        ">
+          ${Math.round(hourly.temperature_2m[i])}°
+        </div>
+
+        <div style="
+          color:#00ffaa;
+          font-size:12px;
+        ">
+          ${weatherText(hourly.weather_code[i])}
+        </div>
+
+        <div style="
+          margin-top:8px;
+          font-size:12px;
+          color:white;
+        ">
+          🌧 ${hourly.precipitation_probability[i]}%
+        </div>
+
+        <div style="
+          margin-top:6px;
+          font-size:12px;
+          color:white;
+        ">
+          💨 ${hourly.wind_speed_10m[i]} km/h
+        </div>
+
+      </div>
+
+      `).join("")}
+
+    </div>
+
+  </div>
+
+  <div class="card">
+
+    <div class="title">
+      📅 Dự báo 5 ngày
+    </div>
+
+    ${daily.time.map((d,i)=>`
+
+    <div class="forecastItem">
+
+      <div style="
+        color:#00ffaa;
+        font-size:15px;
+      ">
+        ${d}
+      </div>
+
+      <div style="
+        margin-top:8px;
+        color:white;
+      ">
+        ${weatherText(daily.weather_code[i])}
+      </div>
+
+      <div style="
+        margin-top:8px;
+        color:white;
+      ">
+        🌡 ${Math.round(daily.temperature_2m_min[i])}°
+        -
+        ${Math.round(daily.temperature_2m_max[i])}°
+      </div>
+
+      <div style="
+        margin-top:8px;
+        color:white;
+      ">
+        🌅 ${daily.sunrise[i].split("T")[1]}
+      </div>
+
+      <div style="
+        margin-top:5px;
+        color:white;
+      ">
+        🌇 ${daily.sunset[i].split("T")[1]}
+      </div>
+
+    </div>
+
+    `).join("")}
+
+  </div>
+
+  <div class="grid">
+
+    <div class="miniCard">
+
+      <div class="title">
+        🌫 AQI
+      </div>
+
+      <div style="
+        text-align:center;
+        font-size:28px;
+        color:white;
+      ">
+        ${aqi}
+      </div>
+
+      <div style="
+        text-align:center;
+        margin-top:8px;
+        color:#00ffaa;
+      ">
+        ${airText(aqi)}
+      </div>
+
+    </div>
+
+    <div class="miniCard">
+
+      <div class="title">
+        ☀ UV
+      </div>
+
+      <div style="
+        text-align:center;
+        font-size:28px;
+        color:white;
+      ">
+        ${current.uv_index}
+      </div>
+
+      <div style="
+        text-align:center;
+        margin-top:8px;
+        color:#00ffaa;
+      ">
+        ${uvText(current.uv_index)}
+      </div>
+
+    </div>
+
+  </div>
+
+  `;
+
+  document.getElementById("status").innerHTML =
+  "Dữ liệu thời tiết realtime theo GPS tài xế";
+
+}
+
+// ===== AUTO UPDATE =====
+
+loadWeather();
+
+setInterval(() => {
+
+  loadWeather();
+
+}, 300000);
+
+// ===== BACK BUTTON =====
+
+document.getElementById("backBtn").onclick = () => {
+
+  window.location.href = "index.html";
+
+};
+
+</script>
+
+</body>
+</html>
