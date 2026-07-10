@@ -14,87 +14,6 @@
       text-align: center;
     }
 
-    h1 {
-      font-size: 30px;
-      margin-top: 20px;
-      text-shadow: 0 0 10px #00ff00;
-    }
-
-    #status {
-      margin: 10px 0 5px;
-      font-size: 18px;
-    }
-
-    #time {
-      font-size: 14px;
-      margin-bottom: 10px;
-      color: #00ffaa;
-    }
-
-    #list {
-      max-width: 500px;
-      margin: auto;
-      padding: 0 10px;
-    }
-
-    .item {
-      border: 2px solid #00ff00;
-      border-radius: 15px;
-      padding: 12px;
-      margin: 10px 0;
-      font-size: 16px;
-      text-align: left;
-      color: white;
-      box-shadow: 0 0 8px #00ff00;
-      cursor: pointer;
-      transition: background-color 0.3s ease, color 0.3s ease;
-    }
-
-    .item:active {
-      background-color: #00ff00;
-      color: black;
-    }
-
-    .module-link {
-      margin: 10px 0;
-      font-size: 18px;
-      display: block;
-      color: #00ff00;
-      text-decoration: none;
-      padding: 10px;
-      border: 2px solid #00ff00;
-      border-radius: 10px;
-      background-color: black;
-      transition: color 0.3s ease, background-color 0.3s ease;
-    }
-
-    .module-link:hover {
-      background-color: #00ff00;
-      color: black;
-    }
-
-    .container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      min-height: 100vh;
-      background-color: black;
-      border: 5px solid #00ff00;
-      border-radius: 15px;
-      padding: 20px;
-      box-sizing: border-box;
-    }
-
-    .module-container {
-      border: 2px solid #00ff00;
-      border-radius: 15px;
-      padding: 20px;
-      margin-top: 20px;
-      width: 80%;
-      box-shadow: 0 0 10px #00ff00;
-    }
-
     /* ===== KEY SYSTEM ===== */
 
     #keyScreen {
@@ -102,7 +21,6 @@
       inset: 0;
       background: black;
       z-index: 99999;
-
       display: flex;
       align-items: center;
       justify-content: center;
@@ -111,14 +29,10 @@
     #keyBox {
       width: 85%;
       max-width: 350px;
-
       border: 2px solid #00ff00;
       border-radius: 20px;
-
       padding: 25px;
-
       box-shadow: 0 0 20px #00ff00;
-
       background: #000;
     }
 
@@ -144,20 +58,14 @@
     #keyInput {
       width: 100%;
       box-sizing: border-box;
-
       padding: 12px;
-
       border-radius: 12px;
       border: 2px solid #00ff00;
-
       background: black;
       color: #00ff00;
-
       outline: none;
-
       font-size: 15px;
       font-family: monospace;
-
       box-shadow: 0 0 10px #00ff00;
     }
 
@@ -168,20 +76,14 @@
     #keyBtn {
       width: 100%;
       margin-top: 15px;
-
       padding: 12px;
-
       border-radius: 15px;
       border: 2px solid #00ff00;
-
       background: black;
       color: #00ff00;
-
       font-size: 16px;
       font-family: monospace;
-
       cursor: pointer;
-
       box-shadow: 0 0 10px #00ff00;
     }
 
@@ -200,53 +102,46 @@
 
 <body>
 
-  <!-- ===== KEY SCREEN ===== -->
+<div id="keyScreen">
+  <div id="keyBox">
 
-  <div id="keyScreen">
-    <div id="keyBox">
+    <h2>HTeam Map</h2>
 
-      <h2>HTeam Map</h2>
-
-      <div class="ver">
-        Công cụ hỗ trợ điểm đứng nổ đơn cho tài xế xanh sm bike<br>
-        Đã cập nhật lựa chọn setup ngày và đêm<br>
-        admin: Nguyễn Việt Hùng<br>
-        zl: 0387675932<br>
-        Ver: 1.2.0
-      </div>
-
-      <div class="text">
-        Nhập key để sử dụng:
-      </div>
-
-      <input type="text" id="keyInput" placeholder="Nhập key...">
-
-      <button id="keyBtn">
-        Xác nhận
-      </button>
-
-      <div id="keyStatus"></div>
-
+    <div class="ver">
+      Công cụ hỗ trợ điểm đứng nổ đơn cho tài xế xanh SM Bike<br>
+      Đã cập nhật lựa chọn setup ngày và đêm<br>
+      Admin: Nguyễn Việt Hùng<br>
+      Zalo: 0387675932<br>
+      Ver: 1.2.0
     </div>
+
+    <div class="text">
+      Nhập key để sử dụng:
+    </div>
+
+    <input type="text" id="keyInput" placeholder="Nhập key...">
+
+    <button id="keyBtn">
+      Xác nhận
+    </button>
+
+    <div id="keyStatus"></div>
+
   </div>
+</div>
 
 <script>
-
-// ===== KEY SYSTEM =====
 
 const KEY_FILE =
 "https://raw.githubusercontent.com/hteammap/hteamsm/main/keys.json";
 
 async function checkKey() {
 
-  const key =
-  document.getElementById("keyInput").value.trim();
+  const key = document.getElementById("keyInput").value.trim();
 
   if (!key) {
-
     document.getElementById("keyStatus").innerHTML =
     "Vui lòng nhập key";
-
     return;
   }
 
@@ -257,67 +152,57 @@ async function checkKey() {
 
     const res = await fetch(KEY_FILE);
 
+    if (!res.ok) {
+      throw new Error("Không tải được dữ liệu");
+    }
+
     const data = await res.json();
 
-    const found =
-    data.keys.find(k => k.key === key);
+    const found = data.keys.find(k => k.key === key);
 
     if (!found) {
-
       document.getElementById("keyStatus").innerHTML =
-      "Key không đúng ❌";
-
+      "❌ Key không đúng";
       return;
     }
 
     const today = new Date();
-
-    const expireDate =
-    new Date(found.expire + "T23:59:59");
+    const expireDate = new Date(found.expire + "T23:59:59");
 
     if (today > expireDate) {
-
       document.getElementById("keyStatus").innerHTML =
-      "Key đã hết hạn ❌";
-
+      "❌ Key đã hết hạn";
       return;
     }
 
     document.getElementById("keyStatus").innerHTML =
-    `Key hợp lệ ✅ HSD: ${found.expire}`;
+    `✅ Key hợp lệ - HSD: ${found.expire}`;
 
+    // Chỉ khi key hợp lệ mới chuyển sang menu.html
     setTimeout(() => {
-
-      document.getElementById("keyScreen").style.display =
-      "none";
-
+      window.location.href = "menu.html";
     }, 1000);
 
-  } catch (e) {
+  } catch (err) {
 
     document.getElementById("keyStatus").innerHTML =
-    "Lỗi kết nối server ❌";
+    "❌ Lỗi kết nối server";
+
+    console.error(err);
 
   }
 
 }
 
-document.getElementById("keyBtn").onclick =
-checkKey;
+document.getElementById("keyBtn").addEventListener("click", checkKey);
 
-document.getElementById("keyInput")
-.addEventListener("keypress", function(e){
-
+document.getElementById("keyInput").addEventListener("keypress", function(e){
   if(e.key === "Enter"){
     checkKey();
   }
-
 });
 
 </script>
-
-</body>
-</html>
 
 </body>
 </html>
