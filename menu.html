@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HTeam Map</title>
+
+<style>
+body {
+    margin: 0;
+    background: black;
+    color: #00ff00;
+    font-family: monospace;
+    text-align: center;
+}
+
+h1 {
+    font-size: 30px;
+    margin-top: 20px;
+    text-shadow: 0 0 10px #00ff00;
+}
+
+/* Slider */
+.slider {
+    width: 90%;
+    max-width: 600px;
+    height: 220px;
+    margin: 15px auto;
+    overflow: hidden;
+    border: 2px solid #00ff00;
+    border-radius: 15px;
+    box-shadow: 0 0 10px #00ff00;
+}
+
+.slider img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+#status {
+    margin: 10px 0 5px;
+    font-size: 18px;
+}
+
+#time {
+    font-size: 14px;
+    margin-bottom: 10px;
+    color: #00ffaa;
+}
+
+.module-link {
+    margin: 10px 0;
+    font-size: 18px;
+    display: block;
+    color: #00ff00;
+    text-decoration: none;
+    padding: 10px;
+    border: 2px solid #00ff00;
+    border-radius: 10px;
+    background-color: black;
+    transition: 0.3s;
+}
+
+.module-link:hover {
+    background: #00ff00;
+    color: black;
+}
+
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    min-height: 100vh;
+    border: 5px solid #00ff00;
+    border-radius: 15px;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.module-container {
+    border: 2px solid #00ff00;
+    border-radius: 15px;
+    padding: 20px;
+    margin-top: 20px;
+    width: 80%;
+    max-width: 600px;
+    box-shadow: 0 0 10px #00ff00;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>HTeam Map</h1>
+
+    <!-- Slider ảnh -->
+    <div class="slider">
+        <img id="slideImage" src="anh1.png" alt="Banner">
+    </div>
+
+    <div id="status">
+        Chọn mục để xem các vị trí!
+    </div>
+
+    <div id="time"></div>
+
+    <div class="module-container">
+
+        <h2>Menu chính</h2>
+
+        <a href="route.html" class="module-link">Tuyến đường kiếm đơn</a>
+
+        <a href="synthetic.html" class="module-link">Tổng Hợp</a>
+
+        <a href="noti.html" class="module-link">Thông Báo</a>
+
+        <a href="event.html" class="module-link">Sự Kiện</a>
+
+        <a href="weather.html" class="module-link">Dự Báo Thời Tiết</a>
+
+        <a href="tool.html" class="module-link">Công cụ</a>
+
+    </div>
+
+</div>
+
+<script>
+const images = [
+    "anh1.png",
+    "anh2.png"
+];
+
+let current = 0;
+
+setInterval(() => {
+    current = (current + 1) % images.length;
+    document.getElementById("slideImage").src = images[current];
+}, 3000);
+
+// Hiển thị giờ
+function updateTime() {
+    const now = new Date();
+    document.getElementById("time").innerHTML =
+        now.toLocaleString("vi-VN");
+}
+
+setInterval(updateTime, 1000);
+updateTime();
+</script>
+
+</body>
+</html>

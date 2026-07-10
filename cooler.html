@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Làm mát điện thoại</title>
+
+<style>
+
+body{
+  margin:0;
+  background:black;
+  color:#00ff00;
+  font-family:monospace;
+  text-align:center;
+}
+
+h1{
+  margin-top:20px;
+  text-shadow:0 0 10px #00ff00;
+}
+
+.box{
+  width:90%;
+  max-width:600px;
+  margin:15px auto;
+  padding:15px;
+  border:2px solid #00ff00;
+  border-radius:20px;
+  box-shadow:0 0 10px #00ff00;
+}
+
+.bigTemp{
+  font-size:55px;
+  margin:10px 0;
+}
+
+button{
+  width:90%;
+  max-width:600px;
+  padding:15px;
+  margin:10px auto;
+  display:block;
+
+  border:2px solid #00ff00;
+  border-radius:20px;
+
+  background:black;
+  color:#00ff00;
+
+  font-family:monospace;
+
+  box-shadow:0 0 10px #00ff00;
+}
+
+button:active{
+  background:#00ff00;
+  color:black;
+}
+
+#status{
+  color:#00ffaa;
+  margin:10px;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>❄ Trung tâm làm mát</h1>
+
+<div id="status">
+Sẵn sàng tối ưu hệ thống
+</div>
+
+<div class="box">
+
+  <div>Nhiệt độ thiết bị (ước tính)</div>
+
+  <div class="bigTemp" id="temp">
+    38°C
+  </div>
+
+  <div id="tempState">
+    Bình thường
+  </div>
+
+</div>
+
+<div class="box">
+
+  <p>CPU tải: <span id="cpu">42%</span></p>
+
+  <p>RAM sử dụng: <span id="ram">58%</span></p>
+
+  <p>Pin: <span id="battery">--%</span></p>
+
+</div>
+
+<div class="box">
+
+  <p>✔ Tắt hiệu ứng nền</p>
+
+  <p>✔ Giảm cập nhật không cần thiết</p>
+
+  <p>✔ Tối ưu tài nguyên ứng dụng</p>
+
+</div>
+
+<button id="coolBtn">
+❄ Bắt đầu tối ưu
+</button>
+
+<button id="backBtn">
+⬅ Quay lại
+</button>
+
+<script>
+
+const tempEl =
+document.getElementById("temp");
+
+const cpuEl =
+document.getElementById("cpu");
+
+const ramEl =
+document.getElementById("ram");
+
+const tempState =
+document.getElementById("tempState");
+
+function updateStats(){
+
+  let temp =
+  Math.floor(Math.random()*8)+35;
+
+  tempEl.innerHTML =
+  temp + "°C";
+
+  cpuEl.innerHTML =
+  (Math.floor(Math.random()*50)+20)+"%";
+
+  ramEl.innerHTML =
+  (Math.floor(Math.random()*35)+40)+"%";
+
+  if(temp < 40){
+
+    tempState.innerHTML =
+    "✅ Mát";
+
+  }
+  else if(temp < 43){
+
+    tempState.innerHTML =
+    "⚠ Hơi nóng";
+
+  }
+  else{
+
+    tempState.innerHTML =
+    "🔥 Nhiệt độ cao";
+
+  }
+
+}
+
+updateStats();
+
+setInterval(updateStats,3000);
+
+if(navigator.getBattery){
+
+  navigator.getBattery()
+  .then(battery => {
+
+    function updateBattery(){
+
+      document.getElementById("battery")
+      .innerHTML =
+      Math.round(
+      battery.level*100
+      ) + "%";
+
+    }
+
+    updateBattery();
+
+    battery.addEventListener(
+      "levelchange",
+      updateBattery
+    );
+
+  });
+
+}
+
+document.getElementById("coolBtn")
+.onclick = () => {
+
+  document.getElementById("status")
+  .innerHTML =
+  "❄ Đang tối ưu ứng dụng...";
+
+  document.body.style.animation =
+  "none";
+
+  setTimeout(() => {
+
+    tempEl.innerHTML = "34°C";
+
+    tempState.innerHTML =
+    "✅ Đã tối ưu";
+
+    document.getElementById("status")
+    .innerHTML =
+    "Hoàn tất tối ưu tài nguyên";
+
+  },2000);
+
+};
+
+document.getElementById("backBtn")
+.onclick = () => {
+
+  history.back();
+
+};
+
+</script>
+
+</body>
+</html>

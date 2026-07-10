@@ -1,235 +1,237 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HTeam Map</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HTeam Map</title>
 
-<style>
-/* ===== KEY SYSTEM ===== */
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      color: #00ff00;
+      font-family: monospace;
+      text-align: center;
+    }
 
-#keyScreen {
-  position: fixed;
-  inset: 0;
-  background: black;
-  z-index: 99999;
+    h1 {
+      font-size: 30px;
+      margin-top: 20px;
+      text-shadow: 0 0 10px #00ff00;
+    }
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+    #status {
+      margin: 10px 0 5px;
+      font-size: 18px;
+    }
 
-#keyBox {
-  width: 85%;
-  max-width: 350px;
+    #time {
+      font-size: 14px;
+      margin-bottom: 10px;
+      color: #00ffaa;
+    }
 
-  border: 2px solid #00ff00;
-  border-radius: 20px;
+    #list {
+      max-width: 500px;
+      margin: auto;
+      padding: 0 10px;
+    }
 
-  padding: 25px;
+    .item {
+      border: 2px solid #00ff00;
+      border-radius: 15px;
+      padding: 12px;
+      margin: 10px 0;
+      font-size: 16px;
+      text-align: left;
+      color: white;
+      box-shadow: 0 0 8px #00ff00;
+      cursor: pointer;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
 
-  box-shadow: 0 0 20px #00ff00;
+    .item:active {
+      background-color: #00ff00;
+      color: black;
+    }
 
-  background: #000;
-}
+    .module-link {
+      margin: 10px 0;
+      font-size: 18px;
+      display: block;
+      color: #00ff00;
+      text-decoration: none;
+      padding: 10px;
+      border: 2px solid #00ff00;
+      border-radius: 10px;
+      background-color: black;
+      transition: color 0.3s ease, background-color 0.3s ease;
+    }
 
-#keyBox h2 {
-  margin: 0;
-  color: #00ff00;
-  text-shadow: 0 0 10px #00ff00;
-}
+    .module-link:hover {
+      background-color: #00ff00;
+      color: black;
+    }
 
-#keyBox .ver {
-  margin-top: 5px;
-  color: #00ffaa;
-  font-size: 14px;
-}
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      min-height: 100vh;
+      background-color: black;
+      border: 5px solid #00ff00;
+      border-radius: 15px;
+      padding: 20px;
+      box-sizing: border-box;
+    }
 
-#keyBox .text {
-  margin-top: 20px;
-  margin-bottom: 10px;
-  color: #00ff00;
-}
+    .module-container {
+      border: 2px solid #00ff00;
+      border-radius: 15px;
+      padding: 20px;
+      margin-top: 20px;
+      width: 80%;
+      box-shadow: 0 0 10px #00ff00;
+    }
 
-#keyInput {
-  width: 100%;
-  box-sizing: border-box;
+    /* ===== KEY SYSTEM ===== */
 
-  padding: 12px;
+    #keyScreen {
+      position: fixed;
+      inset: 0;
+      background: black;
+      z-index: 99999;
 
-  border-radius: 12px;
-  border: 2px solid #00ff00;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-  background: black;
-  color: #00ff00;
+    #keyBox {
+      width: 85%;
+      max-width: 350px;
 
-  outline: none;
+      border: 2px solid #00ff00;
+      border-radius: 20px;
 
-  font-size: 15px;
-  font-family: monospace;
+      padding: 25px;
 
-  box-shadow: 0 0 10px #00ff00;
-}
+      box-shadow: 0 0 20px #00ff00;
 
-#keyInput::placeholder {
-  color: #00aa00;
-}
+      background: #000;
+    }
 
-#keyBtn {
-  width: 100%;
-  margin-top: 15px;
+    #keyBox h2 {
+      margin: 0;
+      color: #00ff00;
+      text-shadow: 0 0 10px #00ff00;
+    }
 
-  padding: 12px;
+    #keyBox .ver {
+      margin-top: 5px;
+      color: #00ffaa;
+      font-size: 14px;
+      line-height: 1.5;
+    }
 
-  border-radius: 15px;
-  border: 2px solid #00ff00;
+    #keyBox .text {
+      margin-top: 20px;
+      margin-bottom: 10px;
+      color: #00ff00;
+    }
 
-  background: black;
-  color: #00ff00;
+    #keyInput {
+      width: 100%;
+      box-sizing: border-box;
 
-  font-size: 16px;
-  font-family: monospace;
+      padding: 12px;
 
-  cursor: pointer;
+      border-radius: 12px;
+      border: 2px solid #00ff00;
 
-  box-shadow: 0 0 10px #00ff00;
-}
+      background: black;
+      color: #00ff00;
 
-#keyBtn:active {
-  background: #00ff00;
-  color: black;
-}
+      outline: none;
 
-#keyStatus {
-  margin-top: 12px;
-  color: #00ffaa;
-  font-size: 14px;
-}
-body {
-  margin: 0;
-  background: black;
-  color: #00ff00;
-  font-family: monospace;
-  text-align: center;
-}
+      font-size: 15px;
+      font-family: monospace;
 
-h1 {
-  font-size: 24px;
-  margin-top: 20px;
-  text-shadow: 0 0 10px #00ff00;
-}
+      box-shadow: 0 0 10px #00ff00;
+    }
 
-#status {
-  margin: 10px 0 5px;
-  font-size: 14px;
-}
+    #keyInput::placeholder {
+      color: #00aa00;
+    }
 
-#time {
-  font-size: 13px;
-  margin-bottom: 10px;
-  color: #00ffaa;
-}
+    #keyBtn {
+      width: 100%;
+      margin-top: 15px;
 
-#list {
-  max-width: 500px;
-  margin: auto;
-  padding: 0 10px;
-}
+      padding: 12px;
 
-.item {
-  border: 2px solid #00ff00;
-  border-radius: 15px;
-  padding: 12px;
-  margin: 10px 0;
-  font-size: 16px;
-  text-align: left;
-  color: white;
-  box-shadow: 0 0 8px #00ff00;
-  cursor: pointer;
-}
+      border-radius: 15px;
+      border: 2px solid #00ff00;
 
-.item:active {
-  background: #00ff00;
-  color: black;
-}
+      background: black;
+      color: #00ff00;
 
-#scanBtn {
-  margin: 20px auto 30px;
-  display: block;
-  padding: 12px 20px;
-  font-size: 16px;
-  border: 2px solid #00ff00;
-  border-radius: 20px;
-  background: black;
-  color: #00ff00;
-  cursor: pointer;
-  box-shadow: 0 0 10px #00ff00;
-}
+      font-size: 16px;
+      font-family: monospace;
 
-#scanBtn:active {
-  background: #00ff00;
-  color: black;
-}
-</style>
+      cursor: pointer;
+
+      box-shadow: 0 0 10px #00ff00;
+    }
+
+    #keyBtn:active {
+      background: #00ff00;
+      color: black;
+    }
+
+    #keyStatus {
+      margin-top: 12px;
+      color: #00ffaa;
+      font-size: 14px;
+    }
+  </style>
 </head>
 
 <body>
-<!-- ===== KEY SCREEN ===== -->
-<div id="keyScreen">
-  <div id="keyBox">
-    <h2>HTeam Map</h2>
-    <div class="ver">Công cụ hỗ trợ điểm đứng nổ đơn cho tài xế xanh sm bike<br>Hoạt động tốt hơn vào ca ngày<br>admin: Nguyễn Việt Hùng<br>zl: 0387675932<br>Ver: 1.1.0</div>
 
-    <div class="text">Nhập key để sử dụng:</div>
+  <!-- ===== KEY SCREEN ===== -->
 
-    <input type="text" id="keyInput" placeholder="Nhập key..." />
+  <div id="keyScreen">
+    <div id="keyBox">
 
-    <button id="keyBtn">Xác nhận</button>
+      <h2>HTeam Map</h2>
 
-    <div id="keyStatus"></div>
+      <div class="ver">
+        Công cụ hỗ trợ điểm đứng nổ đơn cho tài xế xanh sm bike<br>
+        Đã cập nhật lựa chọn setup ngày và đêm<br>
+        admin: Nguyễn Việt Hùng<br>
+        zl: 0387675932<br>
+        Ver: 1.2.0
+      </div>
+
+      <div class="text">
+        Nhập key để sử dụng:
+      </div>
+
+      <input type="text" id="keyInput" placeholder="Nhập key...">
+
+      <button id="keyBtn">
+        Xác nhận
+      </button>
+
+      <div id="keyStatus"></div>
+
+    </div>
   </div>
-</div>
-<h1>HTeam Map</h1>
-<div id="status">Đang quét hotspot...</div>
-<div id="time"></div>
-
-<div id="list"></div>
-
-<button id="scanBtn">🔄 Scan lại</button>
 
 <script>
-const GEMINI_API_KEY = "AIzaSyAnjhXXjS2KVPfyV5VsW_tMeJdUOCKWD8I";
 
-let userLat, userLng;
-let lastIds = [];
-
-// ===== TIME =====
-function getTimeInfo() {
-  const now = new Date();
-
-  const hour = now.getHours();
-  const day = now.getDate();
-  const month = now.getMonth() + 1;
-  const year = now.getFullYear();
-  const weekday = now.toLocaleDateString("vi-VN", { weekday: "long" });
-  const isWeekend = now.getDay() === 0 || now.getDay() === 6;
-
-  const full = `${weekday}, ${day}/${month}/${year} - ${hour}h`;
-
-  document.getElementById("time").innerText = full;
-
-  return { hour, isWeekend, full };
-}
-
-// ===== SHUFFLE =====
-function shuffle(array) {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
-  }
-}
-
-// ===== GPS =====
 // ===== KEY SYSTEM =====
 
 const KEY_FILE =
@@ -237,11 +239,14 @@ const KEY_FILE =
 
 async function checkKey() {
 
-  const key = document.getElementById("keyInput").value.trim();
+  const key =
+  document.getElementById("keyInput").value.trim();
 
   if (!key) {
+
     document.getElementById("keyStatus").innerHTML =
     "Vui lòng nhập key";
+
     return;
   }
 
@@ -251,9 +256,11 @@ async function checkKey() {
   try {
 
     const res = await fetch(KEY_FILE);
+
     const data = await res.json();
 
-    const found = data.keys.find(k => k.key === key);
+    const found =
+    data.keys.find(k => k.key === key);
 
     if (!found) {
 
@@ -263,10 +270,10 @@ async function checkKey() {
       return;
     }
 
-    // ===== CHECK EXPIRE =====
-
     const today = new Date();
-    const expireDate = new Date(found.expire);
+
+    const expireDate =
+    new Date(found.expire + "T23:59:59");
 
     if (today > expireDate) {
 
@@ -276,20 +283,17 @@ async function checkKey() {
       return;
     }
 
-    // ===== SUCCESS =====
-
     document.getElementById("keyStatus").innerHTML =
     `Key hợp lệ ✅ HSD: ${found.expire}`;
 
     setTimeout(() => {
 
-      document.getElementById("keyScreen").style.display = "none";
-
-      startApp();
+      document.getElementById("keyScreen").style.display =
+      "none";
 
     }, 1000);
 
-  } catch {
+  } catch (e) {
 
     document.getElementById("keyStatus").innerHTML =
     "Lỗi kết nối server ❌";
@@ -298,235 +302,22 @@ async function checkKey() {
 
 }
 
-document.getElementById("keyBtn").onclick = checkKey;
-// ===== START APP =====
+document.getElementById("keyBtn").onclick =
+checkKey;
 
-function startApp() {
+document.getElementById("keyInput")
+.addEventListener("keypress", function(e){
 
-  navigator.geolocation.getCurrentPosition(pos => {
-
-    userLat = pos.coords.latitude;
-    userLng = pos.coords.longitude;
-
-    loadPlaces();
-
-  }, () => {
-
-    document.getElementById("status").innerHTML =
-    "Không lấy được GPS ❌";
-
-  });
-
-}
-
-// ===== SCAN BUTTON =====
-document.getElementById("scanBtn").onclick = () => {
-  document.getElementById("status").innerHTML = "Đang quét lại...";
-  document.getElementById("list").innerHTML = "";
-  loadPlaces();
-};
-
-// ===== LOAD DATA =====
-async function loadPlaces() {
-
-  const timeInfo = getTimeInfo();
-
-  const offset = (Math.random() - 0.5) * 0.002;
-  const lat = userLat + offset;
-  const lng = userLng + offset;
-
-  const query = `
-  [out:json];
-  (
-    node(around:1500,${lat},${lng})["amenity"="restaurant"];
-    node(around:1500,${lat},${lng})["amenity"="cafe"];
-    node(around:1500,${lat},${lng})["amenity"="fast_food"];
-    node(around:1500,${lat},${lng})["amenity"="hospital"];
-    node(around:1500,${lat},${lng})["amenity"="university"];
-    node(around:1500,${lat},${lng})["amenity"="bus_station"];
-    node(around:1500,${lat},${lng})["shop"="mall"];
-
-    way(around:1500,${lat},${lng})["amenity"="restaurant"];
-    way(around:1500,${lat},${lng})["amenity"="cafe"];
-    way(around:1500,${lat},${lng})["shop"="mall"];
-  );
-  out center;
-  `;
-
-  try {
-    const res = await fetch("https://overpass-api.de/api/interpreter", {
-      method: "POST",
-      body: query
-    });
-
-    const data = await res.json();
-
-    let places = data.elements
-      .filter(p => p.tags && p.tags.name)
-      .slice(0, 50);
-
-    shuffle(places);
-
-    analyzeAI(places, timeInfo);
-
-  } catch {
-    document.getElementById("status").innerHTML = "Lỗi tải dữ liệu ❌";
+  if(e.key === "Enter"){
+    checkKey();
   }
-}
 
-// ===== AI =====
-async function analyzeAI(places, timeInfo) {
+});
 
-  const prompt = `
-Bạn là tài xế Xanh SM Bike chuyên chạy ca đêm tại Hà Nội.
-
-Thời gian: ${timeInfo.full}
-${timeInfo.isWeekend ? "Hôm nay là cuối tuần (nhu cầu đi lại ban đêm cao hơn)." : "Hôm nay là ngày thường."}
-
-Nhiệm vụ:
-Chọn 10 địa điểm có khả năng NỔ ĐƠN CAO NHẤT (có khách gọi xe nhiều).
-
-⚠️ QUAN TRỌNG:
-- Sau 22h: nhiều quán ăn, cafe đã đóng cửa → KHÔNG ưu tiên
-- Chỉ chọn nơi còn hoạt động ban đêm hoặc có nhu cầu di chuyển
-
-Ưu tiên mạnh:
-- Bệnh viện (trực đêm, cấp cứu)
-- Bến xe, điểm trung chuyển
-- Khu đông dân cư, ngõ lớn
-- Khu trọ, sinh viên, công nhân
-- Quán ăn đêm (còn mở)
-- Khu vui chơi đêm (nếu cuối tuần)
-- Đường lớn dễ bắt khách
-
-Tránh:
-- Quán cafe yên tĩnh
-- Nhà hàng sang (ít gọi xe)
-- Nơi vắng người
-- Địa điểm có khả năng đóng cửa sau 22h
-
-Tư duy như tài xế thật:
-- Khách sẽ đứng ở đâu để gọi xe?
-- Chỗ nào dễ có người vừa đi ra ngoài cần xe?
-
-Danh sách:
-${places.map(p => `id:${p.id} - ${p.tags.name}`).join("\n")}
-
-Chỉ trả JSON:
-[{"id":123}]
-`;
-
-  try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }]
-        })
-      }
-    );
-
-    const data = await res.json();
-    let text = data.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
-
-    text = text.replace(/```json|```/g, "").trim();
-
-    let aiList = JSON.parse(text);
-
-    render(aiList, places);
-
-  } catch {
-    renderFallback(places);
-  }
-}
-
-// ===== UTILS =====
-function getLatLng(p) {
-  return {
-    lat: p.lat || p.center?.lat,
-    lng: p.lon || p.center?.lon
-  };
-}
-
-function getDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371;
-  const dLat = (lat2-lat1) * Math.PI/180;
-  const dLon = (lon2-lon1) * Math.PI/180;
-
-  const a =
-    Math.sin(dLat/2)**2 +
-    Math.cos(lat1*Math.PI/180) *
-    Math.cos(lat2*Math.PI/180) *
-    Math.sin(dLon/2)**2;
-
-  return (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))).toFixed(2);
-}
-
-// ===== RENDER =====
-function render(aiList, raw) {
-  const list = document.getElementById("list");
-  list.innerHTML = "";
-
-  let newIds = [];
-
-  aiList.forEach(item => {
-    if (lastIds.includes(item.id)) return;
-
-    const match = raw.find(p => p.id == item.id);
-    if (!match) return;
-
-    newIds.push(item.id);
-    createItem(match, newIds.length - 1, list);
-  });
-
-  lastIds = newIds;
-
-  if (list.innerHTML === "") {
-    renderFallback(raw);
-  } else {
-    document.getElementById("status").innerHTML = "Hotspot ngon 🔥";
-  }
-}
-
-// ===== FALLBACK =====
-function renderFallback(raw) {
-  const list = document.getElementById("list");
-  list.innerHTML = "";
-
-  raw.slice(0, 10).forEach((p, index) => {
-    createItem(p, index, list);
-  });
-
-  document.getElementById("status").innerHTML = "Gần bạn 📍";
-}
-
-// ===== ITEM =====
-function createItem(p, index, list) {
-  const {lat, lng} = getLatLng(p);
-  if (!lat || !lng) return;
-
-  const distance = getDistance(userLat, userLng, lat, lng);
-
-  let icon = "📍";
-  if (p.tags.amenity === "hospital") icon = "🏥";
-  else if (p.tags.amenity === "university") icon = "🎓";
-  else if (p.tags.shop === "mall") icon = "🏢";
-  else if (p.tags.amenity === "restaurant") icon = "🍜";
-  else if (p.tags.amenity === "cafe") icon = "☕";
-
-  const div = document.createElement("div");
-  div.className = "item";
-  div.innerHTML = `${index + 1}. ${icon} ${p.tags.name} (${distance} km)`;
-
-  div.onclick = () => {
-    window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, "_blank");
-  };
-
-  list.appendChild(div);
-}
 </script>
+
+</body>
+</html>
 
 </body>
 </html>

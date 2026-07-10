@@ -102,13 +102,96 @@
 
   <script>
 
+    // ===== CONFIG (phần thêm mới - còn thiếu trong bản gốc) =====
+
+    // Nếu script.js đã khai báo GEMINI_API_KEY thì dòng dưới sẽ không ghi đè
+    if (typeof GEMINI_API_KEY === "undefined") {
+      var GEMINI_API_KEY = localStorage.getItem("gemini_api_key") || "";
+    }
+
+    // Toạ độ mặc định nếu chưa lấy được GPS (trung tâm Hà Nội)
+    var userLat = typeof userLat !== "undefined" ? userLat : 21.0285;
+    var userLng = typeof userLng !== "undefined" ? userLng : 105.8542;
+
     // ===== BACK BUTTON =====
 
     document.getElementById("backBtn").onclick = () => {
 
-      window.location.href = "index.html";
+      window.location.href = "menu.html";
 
     };
+
+    // ===== SCAN BUTTON (phần thêm mới - nút gốc chưa gắn sự kiện) =====
+
+    document.getElementById("scanBtn").onclick = () => {
+      startScan();
+    };
+
+    // ===== GET GPS LOCATION (phần thêm mới) =====
+
+    function getUserLocation() {
+      return new Promise((resolve) => {
+        if (!navigator.geolocation) {
+          resolve();
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            userLat = pos.coords.latitude;
+            userLng = pos.coords.longitude;
+            resolve();
+          },
+          () => resolve(),
+          { timeout: 5000 }
+        );
+      });
+    }
+
+    // ===== START SCAN (phần thêm mới) =====
+
+    async function startScan() {
+      document.getElementById("status").innerHTML = "Đang lấy vị trí...";
+      document.getElementById("list").innerHTML = "";
+
+      await getUserLocation();
+
+      if (!GEMINI_API_KEY) {
+        const key = prompt("Chưa có Gemini API Key. Nhập vào đây:");
+        if (key && key.trim() !== "") {
+          GEMINI_API_KEY = key.trim();
+          localStorage.setItem("gemini_api_key", GEMINI_API_KEY);
+        }
+      }
+
+      loadPlaces();
+    }
+
+    // ===== TIME INFO (phần thêm mới - hàm bị thiếu) =====
+
+    function getTimeInfo() {
+      const now = new Date();
+      const days = ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
+      const day = days[now.getDay()];
+      const hh = String(now.getHours()).padStart(2, "0");
+      const mm = String(now.getMinutes()).padStart(2, "0");
+
+      document.getElementById("time").innerHTML = `${day}, ${hh}:${mm}`;
+
+      return {
+        full: `${day}, ${hh}:${mm}`,
+        hour: now.getHours()
+      };
+    }
+
+    // ===== SHUFFLE (phần thêm mới - hàm bị thiếu) =====
+
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
 
     // ===== LOAD DATA =====
 
@@ -173,6 +256,11 @@
     // ===== AI =====
 
     async function analyzeAI(places, timeInfo) {
+
+      if (!GEMINI_API_KEY) {
+        renderFallback(places);
+        return;
+      }
 
       const prompt = `
 Bạn là tài xế Xanh SM Bike nhiều kinh nghiệm chạy Hà Nội.
@@ -252,8 +340,23 @@ Chỉ trả JSON theo đúng format:
         text =
         text.replace(/```json|```/g, "").trim();
 
-        let aiList =
-        JSON.parse(text);
+        let aiList = [];
+
+const match =
+text.match(/\[[\s\S]*\]/);
+
+if (match) {
+
+  aiList =
+  JSON.parse(match[0]);
+
+} else {
+
+  throw new Error(
+    "Gemini không trả JSON hợp lệ"
+  );
+
+}
 
         render(aiList, places);
 
@@ -359,6 +462,10 @@ Chỉ trả JSON theo đúng format:
       list.appendChild(div);
 
     }
+
+    // ===== AUTO START (phần thêm mới - trước đây loadPlaces() không bao giờ được gọi) =====
+
+    startScan();
 
   </script>
 

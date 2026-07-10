@@ -190,7 +190,14 @@ input:checked + .slider:before{
   color:black;
 
 }
+#coolerTool{
+  cursor:pointer;
+  transition:.2s;
+}
 
+#coolerTool:active{
+  transform:scale(.98);
+}
 </style>
 </head>
 
@@ -222,6 +229,18 @@ Các công cụ hỗ trợ tài xế
     </label>
 
   </div>
+  <!-- ===== Cool ===== -->
+  <div class="toolBox" id="coolerTool">
+
+  <div class="toolTitle">
+    ❄ Làm mát điện thoại
+  </div>
+
+  <div class="toolDesc">
+    Xem thông tin thiết bị và tối ưu hiệu năng ứng dụng.
+  </div>
+
+</div>
 
   <!-- ===== MODE ===== -->
 
@@ -341,7 +360,7 @@ Các công cụ hỗ trợ tài xế
 
 document.getElementById("backBtn").onclick = () => {
 
-  window.location.href = "index.html";
+  window.location.href = "menu.html";
 
 };
 
@@ -554,7 +573,12 @@ setInterval(() => {
   }
 
 }, 30000);
+document.getElementById("coolerTool")
+.onclick = () => {
 
+  window.location.href = "cooler.html";
+
+};
 </script>
 
 </body>

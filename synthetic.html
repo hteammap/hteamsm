@@ -98,96 +98,150 @@
     ⬅ Quay lại menu
   </button>
 
-  <script src="script.js"></script>
+<script>
 
-  <script>
+  // ===== CONFIG =====
+  // Key Gemini được truyền từ module index.html (qua URL param hoặc sessionStorage)
+  // Nếu bạn truyền theo cách khác, chỉ cần sửa dòng khai báo GEMINI_API_KEY bên dưới.
+  const GEMINI_API_KEY = new URLSearchParams(window.location.search).get("key")
+    || sessionStorage.getItem("gemini_api_key")
+    || "";
 
-    // ===== BACK BUTTON =====
+  let userLat, userLng;
+  let lastIds = [];
 
-    document.getElementById("backBtn").onclick = () => {
+  // ===== TIME =====
+  function getTimeInfo() {
+    const now = new Date();
 
-      window.location.href = "index.html";
+    const hour = now.getHours();
+    const day = now.getDate();
+    const month = now.getMonth() + 1;
+    const year = now.getFullYear();
+    const weekday = now.toLocaleDateString("vi-VN", { weekday: "long" });
+    const isWeekend = now.getDay() === 0 || now.getDay() === 6;
 
-    };
+    const full = `${weekday}, ${day}/${month}/${year} - ${hour}h`;
 
-    // ===== SCAN AGAIN =====
+    document.getElementById("time").innerText = full;
 
-    document.getElementById("scanBtn").onclick = () => {
+    return { hour, isWeekend, full };
+  }
 
-      document.getElementById("status").innerHTML =
-      "Đang quét lại...";
+  // ===== SHUFFLE =====
+  function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+  }
 
-      document.getElementById("list").innerHTML = "";
+  // ===== DISTANCE =====
+  function getDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(lat1 * Math.PI / 180) *
+      Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) ** 2;
+
+    return (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))).toFixed(2);
+  }
+
+  // ===== BACK BUTTON =====
+  document.getElementById("backBtn").onclick = () => {
+    window.location.href = "menu.html";
+  };
+
+  // ===== SCAN AGAIN =====
+  document.getElementById("scanBtn").onclick = () => {
+    document.getElementById("status").innerHTML = "Đang quét lại...";
+    document.getElementById("list").innerHTML = "";
+    loadPlaces();
+  };
+
+  // ===== START APP (tự lấy GPS rồi quét) =====
+  function startApp() {
+    navigator.geolocation.getCurrentPosition(pos => {
+
+      userLat = pos.coords.latitude;
+      userLng = pos.coords.longitude;
 
       loadPlaces();
 
-    };
+    }, () => {
 
-    // ===== LOAD DATA =====
+      document.getElementById("status").innerHTML =
+      "Không lấy được GPS ❌";
 
-    async function loadPlaces() {
+    });
+  }
 
-      const timeInfo = getTimeInfo();
+  // ===== LOAD DATA =====
+  async function loadPlaces() {
 
-      const offset =
-      (Math.random() - 0.5) * 0.002;
+    const timeInfo = getTimeInfo();
 
-      const lat = userLat + offset;
-      const lng = userLng + offset;
+    const offset = (Math.random() - 0.5) * 0.002;
 
-      const query = `
-      [out:json];
-      (
-        node(around:2500,${lat},${lng})["amenity"="restaurant"];
-        node(around:2500,${lat},${lng})["amenity"="fast_food"];
-        node(around:2500,${lat},${lng})["amenity"="cafe"];
-        node(around:2500,${lat},${lng})["amenity"="hospital"];
-        node(around:2500,${lat},${lng})["amenity"="university"];
-        node(around:2500,${lat},${lng})["amenity"="bus_station"];
-        node(around:2500,${lat},${lng})["shop"="mall"];
+    const lat = userLat + offset;
+    const lng = userLng + offset;
 
-        way(around:2500,${lat},${lng})["amenity"="restaurant"];
-        way(around:2500,${lat},${lng})["amenity"="cafe"];
-        way(around:2500,${lat},${lng})["shop"="mall"];
+    const query = `
+    [out:json];
+    (
+      node(around:2500,${lat},${lng})["amenity"="restaurant"];
+      node(around:2500,${lat},${lng})["amenity"="fast_food"];
+      node(around:2500,${lat},${lng})["amenity"="cafe"];
+      node(around:2500,${lat},${lng})["amenity"="hospital"];
+      node(around:2500,${lat},${lng})["amenity"="university"];
+      node(around:2500,${lat},${lng})["amenity"="bus_station"];
+      node(around:2500,${lat},${lng})["shop"="mall"];
+
+      way(around:2500,${lat},${lng})["amenity"="restaurant"];
+      way(around:2500,${lat},${lng})["amenity"="cafe"];
+      way(around:2500,${lat},${lng})["shop"="mall"];
+    );
+    out center;
+    `;
+
+    try {
+
+      const res = await fetch(
+        "https://overpass-api.de/api/interpreter",
+        {
+          method: "POST",
+          body: query
+        }
       );
-      out center;
-      `;
 
-      try {
+      const data = await res.json();
 
-        const res = await fetch(
-          "https://overpass-api.de/api/interpreter",
-          {
-            method: "POST",
-            body: query
-          }
-        );
+      let places =
+      data.elements
+      .filter(p => p.tags && p.tags.name)
+      .slice(0, 80);
 
-        const data = await res.json();
+      shuffle(places);
 
-        let places =
-        data.elements
-        .filter(p => p.tags && p.tags.name)
-        .slice(0, 80);
+      analyzeAI(places, timeInfo);
 
-        shuffle(places);
+    } catch {
 
-        analyzeAI(places, timeInfo);
-
-      } catch {
-
-        document.getElementById("status").innerHTML =
-        "Lỗi tải dữ liệu ❌";
-
-      }
+      document.getElementById("status").innerHTML =
+      "Lỗi tải dữ liệu ❌";
 
     }
 
-    // ===== AI =====
+  }
 
-    async function analyzeAI(places, timeInfo) {
+  // ===== AI =====
+  async function analyzeAI(places, timeInfo) {
 
-      const prompt = `
+    const prompt = `
 Bạn là tài xế Xanh SM Bike nhiều kinh nghiệm chạy Hà Nội.
 
 Thời gian hiện tại:
@@ -236,153 +290,134 @@ Chỉ trả JSON đúng format:
 ]
 `;
 
-      try {
+    try {
 
-        const res = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              contents: [
-                {
-                  parts: [
-                    {
-                      text: prompt
-                    }
-                  ]
-                }
-              ]
-            })
-          }
-        );
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [
+                  {
+                    text: prompt
+                  }
+                ]
+              }
+            ]
+          })
+        }
+      );
 
-        const data = await res.json();
+      const data = await res.json();
 
-        let text =
-        data.candidates?.[0]?.content?.parts?.[0]?.text
-        || "[]";
+      let text =
+      data.candidates?.[0]?.content?.parts?.[0]?.text
+      || "[]";
 
-        text =
-        text.replace(/```json|```/g, "").trim();
+      text =
+      text.replace(/```json|```/g, "").trim();
 
-        let aiList =
-        JSON.parse(text);
+      let aiList = JSON.parse(text);
 
-        render(aiList, places);
+      render(aiList, places);
 
-      } catch {
+    } catch {
 
-        renderFallback(places);
-
-      }
+      renderFallback(places);
 
     }
 
-    // ===== RENDER =====
+  }
 
-    function render(aiList, raw) {
+  // ===== RENDER =====
+  function render(aiList, raw) {
 
-      const list =
-      document.getElementById("list");
+    const list = document.getElementById("list");
+    list.innerHTML = "";
 
-      list.innerHTML = "";
+    let newIds = [];
 
-      aiList.forEach((item, index) => {
+    aiList.forEach(item => {
 
-        const match =
-        raw.find(p => p.id == item.id);
+      if (lastIds.includes(item.id)) return;
 
-        if (!match) return;
+      const match = raw.find(p => p.id == item.id);
+      if (!match) return;
 
-        createItem(match, index, list);
+      newIds.push(item.id);
+      createItem(match, newIds.length - 1, list);
 
-      });
+    });
 
-      document.getElementById("status").innerHTML =
-      "Điểm đứng dễ nổ đơn 🔥";
+    lastIds = newIds;
 
+    if (list.innerHTML === "") {
+      renderFallback(raw);
+    } else {
+      document.getElementById("status").innerHTML = "Điểm đứng dễ nổ đơn 🔥";
     }
 
-    // ===== FALLBACK =====
+  }
 
-    function renderFallback(raw) {
+  // ===== FALLBACK =====
+  function renderFallback(raw) {
 
-      const list =
-      document.getElementById("list");
+    const list = document.getElementById("list");
+    list.innerHTML = "";
 
-      list.innerHTML = "";
+    raw.slice(0, 10).forEach((p, index) => {
+      createItem(p, index, list);
+    });
 
-      raw.slice(0, 10).forEach((p, index) => {
+    document.getElementById("status").innerHTML = "Các điểm gần bạn 📍";
 
-        createItem(p, index, list);
+  }
 
-      });
+  // ===== CREATE ITEM =====
+  function createItem(p, index, list) {
 
-      document.getElementById("status").innerHTML =
-      "Các điểm gần bạn 📍";
+    const lat = p.lat || p.center?.lat;
+    const lng = p.lon || p.center?.lon;
 
-    }
+    if (!lat || !lng) return;
 
-    // ===== CREATE ITEM =====
+    let icon = "📍";
 
-    function createItem(p, index, list) {
+    if (p.tags.amenity === "hospital") icon = "🏥";
+    else if (p.tags.amenity === "restaurant") icon = "🍜";
+    else if (p.tags.amenity === "fast_food") icon = "🍔";
+    else if (p.tags.amenity === "cafe") icon = "☕";
+    else if (p.tags.shop === "mall") icon = "🏢";
+    else if (p.tags.amenity === "bus_station") icon = "🚌";
+    else if (p.tags.amenity === "university") icon = "🎓";
 
-      const lat =
-      p.lat || p.center?.lat;
+    const div = document.createElement("div");
+    div.className = "item";
 
-      const lng =
-      p.lon || p.center?.lon;
+    const distance = getDistance(userLat, userLng, lat, lng);
 
-      if (!lat || !lng) return;
+    div.innerHTML = `${index + 1}. ${icon} ${p.tags.name} (${distance} km)`;
 
-      let icon = "📍";
+    div.onclick = () => {
+      window.open(
+        `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
+        "_blank"
+      );
+    };
 
-      if (p.tags.amenity === "hospital")
-        icon = "🏥";
+    list.appendChild(div);
 
-      else if (p.tags.amenity === "restaurant")
-        icon = "🍜";
+  }
 
-      else if (p.tags.amenity === "fast_food")
-        icon = "🍔";
+  // ===== AUTO START =====
+  startApp();
 
-      else if (p.tags.amenity === "cafe")
-        icon = "☕";
-
-      else if (p.tags.shop === "mall")
-        icon = "🏢";
-
-      else if (p.tags.amenity === "bus_station")
-        icon = "🚌";
-
-      else if (p.tags.amenity === "university")
-        icon = "🎓";
-
-      const div =
-      document.createElement("div");
-
-      div.className = "item";
-
-      div.innerHTML =
-      `${index + 1}. ${icon} ${p.tags.name}`;
-
-      div.onclick = () => {
-
-        window.open(
-          `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
-          "_blank"
-        );
-
-      };
-
-      list.appendChild(div);
-
-    }
-
-  </script>
+</script>
 
 </body>
 </html>
